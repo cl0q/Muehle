@@ -5,20 +5,26 @@
 const int MAX_PIECES = 9;
 
 class Player {
+    std::string name;
     char symbol;
     int piecesLeft = MAX_PIECES;
     int piecesPlaced = 0;
 
+    bool placePiece(std::string position);
+
     public:
     Player(char playerSymbol) {
         symbol = playerSymbol;
+        std::cin >> name;
     }
+
+    int getpiecesPlaced() {return piecesPlaced;}
 
     void decreasePieces() {
         this->piecesLeft--;
     }
 
-    void placePiece(std::string position);
+    void makeMove();
 };
 
 std::map<std::string, char> field = {
@@ -31,12 +37,6 @@ std::map<std::string, char> field = {
     {"B6", '.'}, {"D6", '.'}, {"F6", '.'},
     {"A7", '.'}, {"D7", '.'}, {"G7", '.'}
 };
-
-void Player::placePiece(std::string position)
-{
-    field[position] = symbol;
-    piecesPlaced++;
-}
 
 void showField() {
     std::cout << field["A1"] << "-----------" << field["D1"] << "-----------" << field["G1"] << std::endl;
@@ -51,8 +51,65 @@ void showField() {
     std::cout << field["A7"] << "-----------" << field["D7"] << "-----------" << field["G7"] << std::endl;
 }
 
-int main() {
-    Player p1('X');
-    p1.placePiece("A1");
+bool validateInput(std::string input) {
+    if (field.find(input) == field.end()) {
+        return false;
+    } else { 
+        return true;
+    }
+}
+
+std::string getInput() {
+    std::string input1;
+    std::cin >> input1;
+
+    while (!validateInput(input1)) {
+        std::cout << "Invalid Input! Please try again:" << std::endl;
+        std::cin >> input1;
+    }
+    
+    return input1;
+}
+
+bool Player::placePiece(std::string position)
+{
+    if (field[position] == '.') {
+        field[position] = symbol;
+        piecesPlaced++;
+        return true;
+    } else {
+        std::cout << "Move is not possible!" << std::endl;
+        return false;
+    }
+}
+
+void Player::makeMove()
+{
+    std::cout << "It's " << name << "'s turn" << std::endl;
+    std::string choice1 = getInput();
+    
+    while (!placePiece(choice1)) {
+        choice1 = getInput();
+    }
     showField();
+}
+
+int main() {
+    std::cout << "Enter Name for Player 1: " << std::endl;
+    Player p1('X');
+
+    std::cout << "Enter Name for Player 2: " << std::endl;
+    Player p2('O');
+
+    showField();
+
+    // Phase 1 Beginn
+    while (p1.getpiecesPlaced() < 3 || p2.getpiecesPlaced() < 3)
+    {
+        p1.makeMove();
+        std::cout << std::endl;
+        p2.makeMove();
+    } 
+
+    // TO DO: Prüfen ob eine Mühle erzielt wurde!
 }
