@@ -28,34 +28,33 @@
 
   - Mehrere Runden können nacheinander gespielt werden.
   - Möglichkeit, das Spiel zu pausieren oder zu beenden.
-
-  ### Zwischensapeicher
-
+  - Zustand des Spiels wird bei jedem Zug zwischengespeichert. Wenn das Spiel beendet wurde, wird diese  Datei invalidiert. Wird das Spiel mit valider (offenes Spiel) Savefile gestartet -> User Prompt ob fortsetzen
   
-
+  
+  
   ------
-
+  
   ### **Nicht-funktionale Anforderungen**
   
   **Usability**
-  
+
   - Intuitives Menüsystem mit klaren Optionen (z. B. „Neues Spiel“, „Anleitung“, „Beenden“).
   - Verständliche Fehlermeldungen bei ungültigen Eingaben.
-
+  
   **Leistung**
-
+  
   - Die Anwendung soll schnell starten und reaktionsschnell auf Eingaben reagieren.
-
+  
   **Wartbarkeit**
-
+  
   - Sauberer, modularer Code für leichte Erweiterbarkeit (z. B. Hinzufügen neuer Features).
-
+  
   **Sicherheit**
-
+  
   - Speicherlecks vermeiden durch Einsatz von modernen C++-Techniken (z. B. `std::unique_ptr`, `std::vector`).
-
+  
   **Portabilität**
-
+  
   - Die Anwendung soll auf verschiedenen Plattformen (Linux, Windows, macOS) laufen.
   
   **Optionale Features**
