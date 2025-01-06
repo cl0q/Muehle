@@ -4,6 +4,7 @@
 
 #include "BoardManager.h"
 #include "./Logger/Logger.h"
+#include <algorithm>
 
 extern Logger logger;
 
@@ -24,7 +25,8 @@ bool BoardManager::setStone(int position, int player) {
 }
 
 bool BoardManager::isValidMove(int from, int to) {
-    if (std::find(neighbors[from].begin(), neighbors[from].end(), to) != neighbors[from].end()) {
+    if (std::find(verticalNeighbors[from].begin(), verticalNeighbors[from].end(), to) != verticalNeighbors[from].end()
+    || std::find(horizontalNeighbors[from].begin(), horizontalNeighbors[from].end(), to) != horizontalNeighbors[from].end()) {
         logger.log(LogLevel::DEBUG, "isValidMove: Move from " + std::to_string(from) +
                                     " to " + std::to_string(to) + " is valid.");
         return true;

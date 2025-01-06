@@ -4,6 +4,7 @@
 #include <ctime>
 #include <sstream>
 #include <stdexcept>
+#include <iomanip>
 
 Logger::Logger(LogLevel level, const std::string& fileName)
     : logLevel(level), logToFile(!fileName.empty()) {

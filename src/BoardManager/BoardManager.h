@@ -9,37 +9,65 @@
 #include <unordered_map>
 #include <vector>
 
+enum CellState {EMPTY, PLAYER1, PLAYER2, INVALID};
+
 class BoardManager {
 public:
-    enum CellState {EMPTY, PLAYER1, PLAYER2, INVALID};
+    
     std::vector<CellState> cells;
-    std::unordered_map<int, std::vector<int>> neighbors;
+    std::unordered_map<int, std::vector<int>> verticalNeighbors;
+    std::unordered_map<int, std::vector<int>> horizontalNeighbors;
 
     BoardManager() : cells(24, EMPTY ) {
-        neighbors[0] = {1, 9};
-        neighbors[1] = {0, 2, 4};
-        neighbors[2] = {1, 14};
-        neighbors[3] = {4, 10};
-        neighbors[4] = {1, 3, 5, 7};
-        neighbors[5] = {4, 13};
-        neighbors[6] = {7, 11};
-        neighbors[7] = {4, 6, 8};
-        neighbors[8] = {7, 12};
-        neighbors[9] = {0, 10, 21};
-        neighbors[10] = {3, 9, 11, 18};
-        neighbors[11] = {6, 10, 15};
-        neighbors[12] = {8, 13, 17};
-        neighbors[13] = {5, 12, 14, 20};
-        neighbors[14] = {2, 13, 23};
-        neighbors[15] = {11, 16};
-        neighbors[16] = {15, 17, 19};
-        neighbors[17] = {12, 16};
-        neighbors[18] = {10, 19};
-        neighbors[19] = {16, 18, 20, 22};
-        neighbors[20] = {13, 19};
-        neighbors[21] = {9, 22};
-        neighbors[22] = {19, 21, 23};
-        neighbors[23] = {14, 22};
+        verticalNeighbors[0] = {9};
+        verticalNeighbors[1] = {4};
+        verticalNeighbors[2] = {14};
+        verticalNeighbors[3] = {10};
+        verticalNeighbors[4] = {1, 7};
+        verticalNeighbors[5] = {13};
+        verticalNeighbors[6] = {11};
+        verticalNeighbors[7] = {4};
+        verticalNeighbors[8] = {12};
+        verticalNeighbors[9] = {0, 21};
+        verticalNeighbors[10] = {3, 18};
+        verticalNeighbors[11] = {6, 15};
+        verticalNeighbors[12] = {8, 17};
+        verticalNeighbors[13] = {5, 20};
+        verticalNeighbors[14] = {2, 23};
+        verticalNeighbors[15] = {11};
+        verticalNeighbors[16] = {19};
+        verticalNeighbors[17] = {12};
+        verticalNeighbors[18] = {10};
+        verticalNeighbors[19] = {16, 22};
+        verticalNeighbors[20] = {13};
+        verticalNeighbors[21] = {9};
+        verticalNeighbors[22] = {19};
+        verticalNeighbors[23] = {14};
+
+        horizontalNeighbors[0] = {1};
+        horizontalNeighbors[1] = {0, 2};
+        horizontalNeighbors[2] = {1};
+        horizontalNeighbors[3] = {4};
+        horizontalNeighbors[4] = {3, 5};
+        horizontalNeighbors[5] = {4};
+        horizontalNeighbors[6] = {7};
+        horizontalNeighbors[7] = {6, 8};
+        horizontalNeighbors[8] = {7};
+        horizontalNeighbors[9] = {10};
+        horizontalNeighbors[10] = {9, 11};
+        horizontalNeighbors[11] = {10};
+        horizontalNeighbors[12] = {13};
+        horizontalNeighbors[13] = {12, 14};
+        horizontalNeighbors[14] = {13};
+        horizontalNeighbors[15] = {16};
+        horizontalNeighbors[16] = {15, 17};
+        horizontalNeighbors[17] = {16};
+        horizontalNeighbors[18] = {19};
+        horizontalNeighbors[19] = {18, 20};
+        horizontalNeighbors[20] = {19};
+        horizontalNeighbors[21] = {22};
+        horizontalNeighbors[22] = {21, 23};
+        horizontalNeighbors[23] = {22};
     }
 
     ~BoardManager() {
@@ -47,6 +75,7 @@ public:
     }
 
     bool setStone(int position, int player);
+
     bool isValidMove(int from, int to);
 
     bool moveStone(int from, int to);
