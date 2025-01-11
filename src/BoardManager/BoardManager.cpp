@@ -3,23 +3,22 @@
 //
 
 #include "BoardManager.h"
-#include "./Logger/Logger.h"
+#include "../Logger/Logger.h"
+#include "../Player/Player.h"
 #include <algorithm>
 
-extern Logger logger;
-
-bool BoardManager::setStone(int position, int player) {
+bool BoardManager::setStone(int position, Player* p) {
     if (position < 0 || position >= cells.size()) {
         logger.log(LogLevel::ERROR, "setStone: Position " + std::to_string(position) + " is out of bounds.");
         return false;
     }
-    if (cells[position] != EMPTY) {
+    if (cells[position] != '.') {
         logger.log(LogLevel::WARNING, "setStone: Position " + std::to_string(position) + " is already occupied.");
         return false;
     }
 
-    cells[position] = (player == 1) ? PLAYER1 : PLAYER2;
-    logger.log(LogLevel::INFO, "setStone: Player " + std::to_string(player) +
+    cells[position] = p->symbol;
+    logger.log(LogLevel::INFO, "setStone: Player " + p->name +
                                " placed a stone at position " + std::to_string(position) + ".");
     return true;
 }
@@ -44,12 +43,12 @@ bool BoardManager::moveStone(int from, int to) {
         return false;
     }
 
-    if (cells[from] == EMPTY) {
+    if (cells[from] == '.') {
         logger.log(LogLevel::WARNING, "moveStone: No stone at position " + std::to_string(from) + ".");
         return false;
     }
 
-    if (cells[to] != EMPTY) {
+    if (cells[to] != '.') {
         logger.log(LogLevel::WARNING, "moveStone: Position " + std::to_string(to) + " is already occupied.");
         return false;
     }
@@ -61,7 +60,7 @@ bool BoardManager::moveStone(int from, int to) {
     }
 
     cells[to] = cells[from];
-    cells[from] = EMPTY;
+    cells[from] = '.';
 
     logger.log(LogLevel::INFO, "moveStone: Player " + std::to_string(cells[to]) +
                                " moved stone from " + std::to_string(from) +
@@ -75,12 +74,12 @@ bool BoardManager::removeStone(int at) {
         return false;
     }
 
-    if (cells[at] == EMPTY) {
+    if (cells[at] == '.') {
         logger.log(LogLevel::WARNING, "removeStone: No stone at position " + std::to_string(at) + " to remove.");
         return false;
     }
 
-    cells[at] = EMPTY;
+    cells[at] = '.';
     logger.log(LogLevel::INFO, "removeStone: Stone removed from position " + std::to_string(at) + ".");
     return true;
 }

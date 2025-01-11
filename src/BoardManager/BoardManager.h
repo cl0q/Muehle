@@ -5,20 +5,19 @@
 #ifndef BOARDMANAGER_H
 #define BOARDMANAGER_H
 
+#include "../Player/Player.h"
+#include "../Logger/Logger.h"
 #include <iostream>
 #include <unordered_map>
 #include <vector>
 
-enum CellState {EMPTY, PLAYER1, PLAYER2, INVALID};
-
 class BoardManager {
 public:
-    
-    std::vector<CellState> cells;
+    std::vector<char> cells;
     std::unordered_map<int, std::vector<int>> verticalNeighbors;
     std::unordered_map<int, std::vector<int>> horizontalNeighbors;
 
-    BoardManager() : cells(24, EMPTY ) {
+    BoardManager() : cells(24, '.' ){
         verticalNeighbors[0] = {9};
         verticalNeighbors[1] = {4};
         verticalNeighbors[2] = {14};
@@ -74,7 +73,7 @@ public:
         std::cout << "BoardManager destructor called. Resources freed." << std::endl;
     }
 
-    bool setStone(int position, int player);
+    bool setStone(int position, Player* p);
 
     bool isValidMove(int from, int to);
 

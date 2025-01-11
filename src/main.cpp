@@ -1,48 +1,27 @@
-//
-// Created by Oliver Ilczuk on 05.01.25.
-//
-
 #include <iostream>
-#include "BoardManager/BoardManager.h"
-#include "Logger/Logger.h"
-// Globale Logger-Instanz
-Logger logger(LogLevel::DEBUG, "game.log");
+#include "./BoardManager/BoardManager.h"
+#include "./Player/Player.h"
+#include "./RuleEngine/RuleEngine.h"
+
 
 int main() {
-    // BoardManager-Instanz erstellen
-    BoardManager boardManager;
+// Kleiner Test
+    Player* p1 = new Player {1, 'X'};
+    Player* p2 = new Player {2, 'O'};
+    
+    BoardManager* bm = new BoardManager();
+    RuleEngine re {bm, p1, p2};
 
-    // Spielfeld initialisieren
-    //boardManager.initializeBoard();
-    logger.log(LogLevel::INFO, "Game board initialized.");
+    for (int i = 0; i < 9; i++) {
+        std::cout << p1->name << "'s turn. Select a position" << std::endl;
+        std::string position;
+        std::cin >> position;
+        bm->setStone(std::stoi(position), p1);
 
-    // Beispiel: Stein setzen
-    if (boardManager.setStone(0, 1)) {
-        logger.log(LogLevel::INFO, "Player 1 placed a stone at position 0.");
-    } else {
-        logger.log(LogLevel::ERROR, "Failed to place a stone for Player 1 at position 0.");
+        std::cout << p2->name << "'s turn. Select a position" << std::endl;
+        std::string selection;
+        std::cin >> selection;
+        bm->setStone(std::stoi(selection), p2);
     }
-
-    // Beispiel: Einen ungültigen Stein setzen
-    if (!boardManager.setStone(0, 2)) {
-        logger.log(LogLevel::WARNING, "Player 2 attempted to place a stone at an occupied position 0.");
-    }
-
-    // Beispiel: Stein bewegen
-    if (boardManager.moveStone(0, 1)) {
-        logger.log(LogLevel::INFO, "Player 1 moved a stone from position 0 to position 1.");
-    } else {
-        logger.log(LogLevel::ERROR, "Failed to move stone from 0 to 1.");
-    }
-
-    // Beispiel: Stein entfernen
-    if (boardManager.removeStone(1)) {
-        logger.log(LogLevel::INFO, "Player 1's stone removed from position 1.");
-    } else {
-        logger.log(LogLevel::ERROR, "Failed to remove stone from position 1.");
-    }
-
-    // Beenden des Spiels
-    logger.log(LogLevel::INFO, "Game session ended.");
-    return 0;
+    std::cout << "Phase 1 beendet!" << std::endl;
 }
