@@ -37,4 +37,6 @@ public:
     void setLogLevel(LogLevel level);
 };
 
+extern Logger logger;
+
 #endif // LOGGER_H

@@ -5,28 +5,23 @@
 #include "BoardManager.h"
 #include "../Logger/Logger.h"
 #include "../Player/Player.h"
-#include "../RuleEngine/RuleEngine.h"
 #include <algorithm>
 #include <vector>
 
-extern Logger logger;
-
-BoardManager::BoardManager() : cells(24, EMPTY) {
-    initializeNeighbors();
-}
-
-bool BoardManager::setStone(int position, CellState state) {
+bool BoardManager::setStone(int position, Player* p) {
     if (position < 0 || position >= cells.size()) {
         std::cerr << "setStone: Position out of bounds" << std::endl;
         return false;
     }
-    if (cells[position] != EMPTY) {
-        std::cerr << "setStone: Position already occupied" << std::endl;
+    if (cells[position] != '.') {
+        logger.log(LogLevel::WARNING, "setStone: Position " + std::to_string(position) + " is already occupied.");
         return false;
     }
     cells[position] = state;
 
-    switchPlayer();
+    cells[position] = p->symbol;
+    logger.log(LogLevel::INFO, "setStone: Player " + p->name +
+                               " placed a stone at position " + std::to_string(position) + ".");
     return true;
 }
 
@@ -55,12 +50,12 @@ bool BoardManager::moveStone(int from, int to, Player* p) {
         return false;
     }
 
-    if (cells[from] == BoardManager::EMPTY) {
+    if (cells[from] == '.') {
         logger.log(LogLevel::WARNING, "moveStone: No stone at position " + std::to_string(from) + ".");
         return false;
     }
 
-    if (cells[to] != BoardManager::EMPTY) {
+    if (cells[to] != '.') {
         logger.log(LogLevel::WARNING, "moveStone: Position " + std::to_string(to) + " is already occupied.");
         return false;
     }
@@ -80,7 +75,7 @@ if (getCellState(cells[from]) != getCurrentPlayer()) {
 */
 
     cells[to] = cells[from];
-    cells[from] = EMPTY;
+    cells[from] = '.';
 
     logger.log(LogLevel::INFO, "moveStone: Player " + std::to_string(cells[to]) +
                                " moved stone from " + std::to_string(from) +
@@ -95,14 +90,12 @@ bool BoardManager::removeStone(int at, Player* p) {
         return false;
     }
 
-    if (cells[at] == BoardManager::EMPTY) {
+    if (cells[at] == '.') {
         logger.log(LogLevel::WARNING, "removeStone: No stone at position " + std::to_string(at) + " to remove.");
         return false;
     }
 
-    cells[at] = EMPTY;
-    p->decreaseTotalStones();
-    rule_engine->canPlayerJump(p);
+    cells[at] = '.';
     logger.log(LogLevel::INFO, "removeStone: Stone removed from position " + std::to_string(at) + ".");
     switchPlayer();
     return true;

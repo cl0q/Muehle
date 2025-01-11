@@ -1,7 +1,3 @@
-//
-// Created by Oliver Ilczuk on 05.01.25.
-//
-
 #include <iostream>
 #include "BoardManager/BoardManager.h"
 #include "Logger/Logger.h"

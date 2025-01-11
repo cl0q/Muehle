@@ -1,5 +1,4 @@
-#include "./Player.h"
-
+#include "Player.h"
 
 int Player::place_stone()
 {
@@ -15,10 +14,4 @@ int Player::getTotalStones()
 int Player::getStonesPlayed()
 {
     return stonesPlayed;
-}
-
-int Player::decreaseTotalStones()
-{
-    totalStones--;
-    return totalStones;
 }
