@@ -15,14 +15,16 @@ bool RuleEngine::millHelper(std::unordered_map<int, std::vector<int>> neighborLi
         }
         return true;
     } else {
-        if (int neighbor = neighborList[position][0] == symbol) {
+        int neighbor = neighborList[position][0];
+        if (cells[neighbor] == symbol) {
             for (int element : neighborList[neighbor]) {
                 if (cells[element] != symbol) {
                     return false;
                 }
             }
+            return true;
         }
-        return true;
+        return false;
     }
 }
 

@@ -3,7 +3,6 @@
 #include "./Player/Player.h"
 #include "./RuleEngine/RuleEngine.h"
 
-
 int main() {
 // Kleiner Test
     Player* p1 = new Player {1, 'X'};
@@ -14,14 +13,34 @@ int main() {
 
     for (int i = 0; i < 9; i++) {
         std::cout << p1->name << "'s turn. Select a position" << std::endl;
-        std::string position;
+        int position;
         std::cin >> position;
-        bm->setStone(std::stoi(position), p1);
+
+        while (!bm->setStone(position, p1)) {
+            std::cout << "Selection is invalid, please try again!" << std::endl;
+            std::cin >> position;
+        }
+
+        if (re.isMillFormed(position, p1->symbol)) {
+            std::cout << "Player 1 hat eine Muehle geformt!" << std::endl;
+        }
 
         std::cout << p2->name << "'s turn. Select a position" << std::endl;
-        std::string selection;
-        std::cin >> selection;
-        bm->setStone(std::stoi(selection), p2);
+        std::cin >> position;
+
+        while (!bm->setStone(position, p2)) {
+            std::cout << "Selection is invalid, please try again!" << std::endl;
+            std::cin >> position;
+            std::cout << "Invalid Argument Exception was thrown. Try Again:" << std::endl;
+        }
+
+        if (re.isMillFormed(position, p2->symbol)) {
+            std::cout << "Player 2 hat eine Muehle geformt!";
+        }
     }
     std::cout << "Phase 1 beendet!" << std::endl;
+
+    delete p1;
+    delete p2;
+    delete bm;
 }

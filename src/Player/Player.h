@@ -18,6 +18,10 @@ class Player {
     int place_stone();
     int getTotalStones();
     int getStonesPlayed();
+
+    ~Player() {
+         std::cout << "Player " << name << " destructor called. Resources freed." << std::endl;
+    }
 };
 
 #endif
