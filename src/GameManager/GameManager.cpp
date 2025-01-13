@@ -38,7 +38,7 @@ void GameManager::start() {
 
 void GameManager::startNewGame() {
     logger.log(LogLevel::INFO, "GameManager: Starting new game.");
-    uiManager.clearScreen();
+    clearScreen();
 
     int startingPlayer = randomPlayerStart();
     logger.log(LogLevel::INFO, "GameManager: Player " + std::to_string(startingPlayer) + " starts the game.");
@@ -103,6 +103,10 @@ bool GameManager::random50Percent() {
 
 int GameManager::randomPlayerStart() {
     return random50Percent() ? 1 : 2;
+}
+
+void GameManager::clearScreen() {
+    std::cout << "\033[2J\033[H";
 }
 
 

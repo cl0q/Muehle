@@ -5,16 +5,10 @@
 #ifndef GAMEMANAGER_H
 #define GAMEMANAGER_H
 
-#include "./PlayerManager/PlayerManager.h"
-#include "./UIManager/UIManager.h"
-#include "./InputHandler/InputHandler.h"
 #include "BoardManager/BoardManager.h"
 
 class GameManager {
 private:
-    PlayerManager playerManager;
-    UIManager uiManager;
-    InputHandler inputHandler;
     BoardManager board_manager;
 
 public:
@@ -33,6 +27,8 @@ public:
     void start();
 
     static int randomPlayerStart();
+
+    static void clearScreen();
 
     void startNewGame();
     static void handleSettingsMenu();
