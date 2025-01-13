@@ -8,7 +8,8 @@
 Logger::Logger(LogLevel level, const std::string& fileName)
     : logLevel(level), logToFile(!fileName.empty()) {
     if (logToFile) {
-        logFile.open(fileName, std::ios::out | std::ios::app);
+        // Datei im Truncate-Modus öffnen, um sie zu leeren
+        logFile.open(fileName, std::ios::out | std::ios::trunc);
         if (!logFile.is_open()) {
             throw std::runtime_error("Konnte Log-Datei nicht öffnen.");
         }
@@ -50,14 +51,17 @@ std::string Logger::getColor(LogLevel level) const {
 }
 
 void Logger::log(LogLevel level, const std::string& message) {
-    if (level < logLevel) return;
-
+    // Erstelle die Log-Nachricht
     std::string logMessage = "[" + getTimestamp() + "] [" + levelToString(level) + "] " + message;
 
-    std::cout << getColor(level) << logMessage << RESET << std::endl;
-
+    // Schreibe alle Nachrichten in die Datei, unabhängig vom Log-Level
     if (logToFile) {
         logFile << logMessage << std::endl;
+    }
+
+    // Schreibe Nachrichten nur in die Konsole, wenn der Log-Level passt
+    if (level >= logLevel) {
+        std::cout << getColor(level) << logMessage << RESET << std::endl;
     }
 }
 

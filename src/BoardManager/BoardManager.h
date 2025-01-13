@@ -8,6 +8,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+#include <Logger/Logger.h>
 
 class BoardManager {
 public:
@@ -43,15 +44,18 @@ public:
     }
 
     ~BoardManager() {
-        std::cout << "BoardManager destructor called. Resources freed." << std::endl;
+        extern Logger logger;
+        logger.log(LogLevel::DEBUG, "~BoardManager called.");
     }
 
     bool setStone(int position, int player);
     bool isValidMove(int from, int to);
-
     bool moveStone(int from, int to);
-
     bool removeStone(int at);
+    int getCurrentPlayer() const;
+
+private:
+    int currentPlayer = 1; // Spieler 1 beginnt
 };
 
 #endif //BOARDMANAGER_H

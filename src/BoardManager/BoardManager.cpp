@@ -82,3 +82,7 @@ bool BoardManager::removeStone(int at) {
     logger.log(LogLevel::INFO, "removeStone: Stone removed from position " + std::to_string(at) + ".");
     return true;
 }
+
+int BoardManager::getCurrentPlayer() const {
+    return currentPlayer;
+}
