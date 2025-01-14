@@ -17,6 +17,7 @@ void GameManager::start() {
     logger.log(LogLevel::INFO, "GameManager: Starting game manager.");
 
     logger.log(LogLevel::INFO, "GameManager: Displaying main menu.");
+    std::cout << "\n\n\n";
     std::cout << "\t\t\tWillkommen bei Mühle!\n\n";
     std::cout << "\t\t1. Neues Spiel starten\n";
     std::cout << "\t\t2. Spiel laden\n";
