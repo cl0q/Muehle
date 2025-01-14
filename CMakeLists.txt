@@ -11,4 +11,6 @@ add_executable(Muehle
         src/BoardManager/BoardManager.cpp
         src/Logger/Logger.cpp
         src/GameManager/GameManager.h
-        src/GameManager/GameManager.cpp)
+        src/GameManager/GameManager.cpp
+        src/InputHandler/InputHandler.cpp
+        src/InputHandler/InputHandler.h)
