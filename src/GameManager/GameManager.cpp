@@ -126,12 +126,16 @@ void GameManager::printBoard(const BoardManager& boardManager, int currentPlayer
         }
     };
 
-    const auto& cells = boardManager.cells;
+    const auto& cells = boardManager.getCells();
+
+    for (int i = 0; i < cells.size(); ++i) {
+        logger.log(LogLevel::DEBUG, "Cell " + std::to_string(i) + ": " + std::to_string(cells[i]));
+    }
 
     std::cout << "\033[2J\033[H"; // Bildschirm löschen und Cursor zurücksetzen
 
     logger.log(LogLevel::INFO, "GameManager: Drawing board.");
-    std::cout << "\n";
+    std::cout << "\n\n\n";
     std::cout << "				  " << getCellRepresentation(cells[0]) << "--------------------" << getCellRepresentation(cells[1]) << "--------------------" << getCellRepresentation(cells[2]) << "\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
@@ -152,6 +156,7 @@ void GameManager::printBoard(const BoardManager& boardManager, int currentPlayer
     std::cout << "				    |                        |                        |\n";
     std::cout << "				  " << getCellRepresentation(cells[21]) << "--------------------" << getCellRepresentation(cells[22]) << "--------------------" << getCellRepresentation(cells[23]) << "\n";
     std::cout << "\n\n\n";
+    std::cout << "\t\t\t\t\t\t **Am Zug: Spieler " << (currentPlayer == 1 ? player1 : player2) << "**\n";
 
     logger.log(LogLevel::INFO, "GameManager: Player " + std::to_string(currentPlayer) + " is now playing.");
 }

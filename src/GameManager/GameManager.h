@@ -9,12 +9,10 @@
 
 class GameManager {
 private:
-    BoardManager board_manager;
+    BoardManager& board_manager;
 
 public:
-    GameManager(BoardManager board_manager) {
-        this->board_manager = board_manager;
-    }
+    GameManager(BoardManager& board_manager) : board_manager(board_manager) {};
 
     static void printBoard(const BoardManager &boardManager, int currentPlayer);
 

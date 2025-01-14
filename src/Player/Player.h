@@ -4,6 +4,8 @@
 #include <iostream>
 #include "../BoardManager/BoardManager.h"
 
+extern Logger logger;
+
 class Player {
     int totalStones;
     int stonesPlayed;
@@ -14,8 +16,7 @@ class Player {
     BoardManager::CellState identifier;
 
     Player(int number, BoardManager::CellState identifier) : totalStones(9), stonesPlayed(0), identifier(identifier) {
-        std::cout << "Enter Name for Player " << number << std::endl;
-        std::cin >> name;
+        name = std::to_string(identifier);
     };
     
     int place_stone();
@@ -23,7 +24,8 @@ class Player {
     int getStonesPlayed();
 
     ~Player() {
-         std::cout << "Player " << name << " destructor called. Resources freed." << std::endl;
+        logger.log(LogLevel::DEBUG, "Player " + name + " destructor called. Resources freed.");
+
     }
 };
 
