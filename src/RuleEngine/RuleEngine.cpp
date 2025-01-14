@@ -6,19 +6,19 @@
 
 extern Logger logger;
 
-bool RuleEngine::millHelper(std::unordered_map<int, std::vector<int>> neighborList, std::vector<char> cells, int position, char symbol) {
+bool RuleEngine::millHelper(std::unordered_map<int, std::vector<int>> neighborList, std::vector<BoardManager::CellState> cells, int position, BoardManager::CellState state) {
     if (neighborList[position].size() == 2) {
         for (int cell : neighborList[position]) {
-            if (cells[cell] != symbol) {
+            if (cells[cell] != state) {
                 return false;
             }
         }
         return true;
     } else {
         int neighbor = neighborList[position][0];
-        if (cells[neighbor] == symbol) {
+        if (cells[neighbor] == state) {
             for (int element : neighborList[neighbor]) {
-                if (cells[element] != symbol) {
+                if (cells[element] != state) {
                     return false;
                 }
             }
@@ -28,26 +28,26 @@ bool RuleEngine::millHelper(std::unordered_map<int, std::vector<int>> neighborLi
     }
 }
 
-bool RuleEngine::isMillFormed(int position, char symbol) {
+bool RuleEngine::isMillFormed(int position, BoardManager::CellState identifier) {
 
     if (position < 0 || position >= bm->cells.size()) {
         logger.log(LogLevel::ERROR, "isMillFormed: Position " + std::to_string(position) + " is out of bounds.");
         return false;
     }
 
-    if (millHelper(bm->horizontalNeighbors, bm->cells, position, symbol)) {
+    if (millHelper(bm->horizontalNeighbors, bm->cells, position, identifier)) {
         return true;
     }
 
-    if (millHelper(bm->verticalNeighbors, bm->cells, position, symbol)) {
+    if (millHelper(bm->verticalNeighbors, bm->cells, position, identifier)) {
         return true;
     }
     
     return false;
 }
 
-bool RuleEngine::canPlayerJump(Player p) {
-    if (p.getTotalStones() == 3) {
+bool RuleEngine::canPlayerJump(Player* p) {
+    if (p->getTotalStones() == 3) {
         return true;
     } else {
         return false;
@@ -59,4 +59,22 @@ bool RuleEngine::isGameOver() {
         return true;
     }
     return false;
+}
+
+bool RuleEngine::canGameContinue()
+{
+
+    if (isMillFormed) {
+        return false;
+    } 
+
+    if (canPlayerJump(player1) || canPlayerJump(player2)) {
+        return false;
+    }
+
+    if (isGameOver()) {
+        return false;
+    }
+
+    return true;
 }

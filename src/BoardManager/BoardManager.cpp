@@ -4,10 +4,9 @@
 
 #include "BoardManager.h"
 #include "../Logger/Logger.h"
-#include "../Player/Player.h"
 #include <algorithm>
 
-bool BoardManager::setStone(int position, Player* p) {
+bool BoardManager::setStone(int position, CellState player) {
     if (position < 0 || position >= cells.size()) {
         logger.log(LogLevel::ERROR, "setStone: Position " + std::to_string(position) + " is out of bounds.");
         return false;
@@ -17,8 +16,8 @@ bool BoardManager::setStone(int position, Player* p) {
         return false;
     }
 
-    cells[position] = p->symbol;
-    logger.log(LogLevel::INFO, "setStone: Player " + p->name +
+    cells[position] = (player == 1) ? PLAYER1 : PLAYER2;
+    logger.log(LogLevel::INFO, "setStone: Player " + std::to_string(player) +
                                " placed a stone at position " + std::to_string(position) + ".");
     return true;
 }
@@ -60,7 +59,7 @@ bool BoardManager::moveStone(int from, int to) {
     }
 
     cells[to] = cells[from];
-    cells[from] = '.';
+    cells[from] = EMPTY;
 
     logger.log(LogLevel::INFO, "moveStone: Player " + std::to_string(cells[to]) +
                                " moved stone from " + std::to_string(from) +
@@ -79,7 +78,11 @@ bool BoardManager::removeStone(int at) {
         return false;
     }
 
-    cells[at] = '.';
+    cells[at] = EMPTY;
     logger.log(LogLevel::INFO, "removeStone: Stone removed from position " + std::to_string(at) + ".");
     return true;
 }
+
+int BoardManager::getCurrentPlayer() const {
+        return currentPlayer;
+    }

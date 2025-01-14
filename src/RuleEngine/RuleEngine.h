@@ -10,7 +10,7 @@
 class RuleEngine
 {
 private:
-    bool millHelper(std::unordered_map<int, std::vector<int>> neighborList, std::vector<char> cells, int position, char symbol);
+    bool millHelper(std::unordered_map<int, std::vector<int>> neighborList, std::vector<BoardManager::CellState> cells, int position, BoardManager::CellState state);
 
 public:
 
@@ -28,11 +28,13 @@ public:
         std::cout << "RuleEngine destructor called. Resources freed." << std::endl;
     }
 
-    bool isMillFormed(int position, char symbol);
+    bool isMillFormed(int position, BoardManager::CellState identifier);
 
-    bool canPlayerJump(Player p);
+    bool canPlayerJump(Player* p);
 
     bool isGameOver();
+
+    bool canGameContinue();
 };
 
 
