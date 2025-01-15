@@ -23,6 +23,8 @@ bool BoardManager::setStone(int position, CellState state) {
     }
     cells[position] = state;
 
+    logger.log(LogLevel::ERROR, "setStone: CurrentPlayer " + enumToString(getCurrentPlayer()) + " set stone at position " + std::to_string(position) + " for player " + enumToString(state) + ".");
+
     switchPlayer();
     return true;
 }
@@ -63,9 +65,13 @@ bool BoardManager::moveStone(int from, int to) {
         return false;
     }
 
-    if (getCellState(cells[from]) != getCurrentPlayer()) {
-        logger.log(LogLevel::WARNING, "moveStone: Player " + std::to_string(getCurrentPlayer()) +
-                                      " is not allowed to move stone from position " + std::to_string(from) + ".");
+    if (getCellState(from) != getCurrentPlayer() ) {
+        logger.log(LogLevel::WARNING, "moveStone:  Player: " + enumToString(getCurrentPlayer()) +
+                                      " is not allowed to move stone from position " + std::to_string(from) +
+                                      ".\n cellFrom: " + std::to_string(from) + " " + enumToString(getCellState(from)) +
+                                      "\n cellTo: "  + std::to_string(to) + " " +enumToString(getCellState(to)) +
+                                      ""
+                                      );
         return false;
     }
 
@@ -74,7 +80,7 @@ bool BoardManager::moveStone(int from, int to) {
 
     logger.log(LogLevel::INFO, "moveStone: Player " + std::to_string(cells[to]) +
                                " moved stone from " + std::to_string(from) +
-                               " to " + std::to_string(to) + ".");
+                               " to " + std::to_string(to) + ".\n cellFrom: " + enumToString(getCellState(from)) + "\n cellTo: " + enumToString(getCellState(to)));
     switchPlayer();
     return true;
 }
@@ -104,13 +110,18 @@ BoardManager::CellState BoardManager::getCurrentPlayer() const {
             return PLAYER2;
         }
         else {
-            return INVALID;
+            return EMPTY;
         }
     }
 
-int BoardManager::switchPlayer() {
-    currentPlayer = currentPlayer == 1 ? 2 : 1;
-    return currentPlayer;
+void BoardManager::switchPlayer() {
+    if (currentPlayer == CellState::PLAYER1) {
+        currentPlayer = CellState::PLAYER2;
+    } else if (currentPlayer == CellState::PLAYER2) {
+        currentPlayer = CellState::PLAYER1;
+    } else {
+        logger.log(LogLevel::ERROR, "switchPlayer: Invalid player " + std::to_string(currentPlayer) + ".");
+    }
 }
 
 std::vector<std::pair<int, BoardManager::CellState>> BoardManager::getNeighborsWithState(int position) const {
@@ -143,6 +154,19 @@ BoardManager::CellState BoardManager::getCellState(int position) const {
 
 const std::vector<BoardManager::CellState>& BoardManager::getCells() const {
     return cells;
+}
+
+std::string BoardManager::enumToString(BoardManager::CellState state) {
+    switch (state) {
+        case BoardManager::CellState::PLAYER1: return "PLAYER1";
+        case BoardManager::CellState::PLAYER2: return "PLAYER2";
+        case BoardManager::CellState::EMPTY:   return "EMPTY";
+        default: throw std::invalid_argument("Unknown CellState");
+    }
+}
+
+void BoardManager::setCurrentPlayer(int currentPlayer) {
+    currentPlayer = currentPlayer;
 }
 
 void BoardManager::initializeNeighbors() {

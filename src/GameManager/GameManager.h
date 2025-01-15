@@ -11,14 +11,17 @@ class GameManager {
 private:
     BoardManager& board_manager;
     bool isMovingStone;
-    int movingStoneFrom = -1;
+    int movingStoneFrom;
+    bool pressedEnter;
 
 public:
     GameManager(BoardManager& board_manager) : board_manager(board_manager) {};
 
     int moveCursor(BoardManager &boardManager, int currentCell);
 
-    void printBoard(const BoardManager &boardManager, int currentPlayer, int currentCell);
+    void printStatus(BoardManager &boardManager, int currentCell);
+
+    void printBoard(const BoardManager &boardManager, BoardManager::CellState currentPlayer, int currentCell);
 
     void gameLoop();
 
@@ -28,7 +31,7 @@ public:
 
     void start();
 
-    static int randomPlayerStart();
+    int randomPlayerStart() const;
 
     static void clearScreen();
 
