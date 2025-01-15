@@ -4,7 +4,10 @@
 
 #include "BoardManager.h"
 #include "../Logger/Logger.h"
+#include "../Player/Player.h"
+#include "../RuleEngine/RuleEngine.h"
 #include <algorithm>
+#include <vector>
 
 extern Logger logger;
 
@@ -27,20 +30,25 @@ bool BoardManager::setStone(int position, CellState state) {
     return true;
 }
 
-bool BoardManager::isValidMove(int from, int to) {
-    if (std::find(verticalNeighbors[from].begin(), verticalNeighbors[from].end(), to) != verticalNeighbors[from].end()
-    || std::find(horizontalNeighbors[from].begin(), horizontalNeighbors[from].end(), to) != horizontalNeighbors[from].end()) {
-        logger.log(LogLevel::DEBUG, "isValidMove: Move from " + std::to_string(from) +
-                                    " to " + std::to_string(to) + " is valid.");
-        return true;
+bool BoardManager::isValidMove(int from, int to, Player* p) {
+
+    if (!rule_engine->canPlayerJump(p)) {
+        if (std::find(verticalNeighbors[from].begin(), verticalNeighbors[from].end(), to) != verticalNeighbors[from].end()
+        || std::find(horizontalNeighbors[from].begin(), horizontalNeighbors[from].end(), to) != horizontalNeighbors[from].end()) {
+            logger.log(LogLevel::DEBUG, "isValidMove: Move from " + std::to_string(from) +
+                                        " to " + std::to_string(to) + " is valid.");
+            return true;
+        } else {
+            logger.log(LogLevel::DEBUG, "isValidMove: Move from " + std::to_string(from) +
+                                        " to " + std::to_string(to) + " is invalid.");
+            return false;
+        }
     } else {
-        logger.log(LogLevel::DEBUG, "isValidMove: Move from " + std::to_string(from) +
-                                    " to " + std::to_string(to) + " is invalid.");
-        return false;
+        return true;
     }
 }
 
-bool BoardManager::moveStone(int from, int to) {
+bool BoardManager::moveStone(int from, int to, Player* p) {
     if (from < 0 || from >= cells.size() || to < 0 || to >= cells.size()) {
         logger.log(LogLevel::ERROR, "moveStone: Invalid indices. From: " + std::to_string(from) +
                                     ", To: " + std::to_string(to) + ".");
@@ -57,17 +65,19 @@ bool BoardManager::moveStone(int from, int to) {
         return false;
     }
 
-    if (!isValidMove(from, to)) {
+    if (!isValidMove(from, to, p)) {
         logger.log(LogLevel::WARNING, "moveStone: Move from " + std::to_string(from) +
                                       " to " + std::to_string(to) + " is not valid.");
         return false;
     }
 
-    if (getCellState(cells[from]) != getCurrentPlayer()) {
+/*
+if (getCellState(cells[from]) != getCurrentPlayer()) {
         logger.log(LogLevel::WARNING, "moveStone: Player " + std::to_string(getCurrentPlayer()) +
                                       " is not allowed to move stone from position " + std::to_string(from) + ".");
         return false;
     }
+*/
 
     cells[to] = cells[from];
     cells[from] = EMPTY;
@@ -79,7 +89,7 @@ bool BoardManager::moveStone(int from, int to) {
     return true;
 }
 
-bool BoardManager::removeStone(int at) {
+bool BoardManager::removeStone(int at, Player* p) {
     if (at < 0 || at >= cells.size()) {
         logger.log(LogLevel::ERROR, "removeStone: Position " + std::to_string(at) + " is out of bounds.");
         return false;
@@ -91,6 +101,8 @@ bool BoardManager::removeStone(int at) {
     }
 
     cells[at] = EMPTY;
+    p->decreaseTotalStones();
+    rule_engine->canPlayerJump(p);
     logger.log(LogLevel::INFO, "removeStone: Stone removed from position " + std::to_string(at) + ".");
     switchPlayer();
     return true;

@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "../Player/Player.h"
 #include "../BoardManager/BoardManager.h"
+#include "../RuleEngine/RuleEngine.h"
 
 class RuleEngine
 {
@@ -14,11 +15,11 @@ private:
 
 public:
 
-    BoardManager* bm;
+    BoardManager* board_manager;
     Player* player1;
     Player* player2;
 
-    RuleEngine(BoardManager* boardManager, Player* p1, Player* p2) : bm(boardManager), player1(p1), player2(p2)
+    RuleEngine(BoardManager* boardManager, Player* p1, Player* p2) : board_manager(boardManager), player1(p1), player2(p2)
     {
 
     }
@@ -34,7 +35,6 @@ public:
 
     bool isGameOver();
 
-    bool canGameContinue();
 };
 
 

@@ -6,6 +6,8 @@
 #define BOARDMANAGER_H
 
 #include "../Logger/Logger.h"
+#include "../RuleEngine/RuleEngine.h"
+#include "../Player/Player.h"
 #include <iostream>
 #include <unordered_map>
 #include <vector>
@@ -14,7 +16,7 @@ extern Logger logger;
 
 class BoardManager {
 public:
-
+    RuleEngine* rule_engine;
     enum CellState {PLAYER1, PLAYER2, EMPTY, INVALID};
 
     std::vector<CellState> cells;
@@ -30,11 +32,11 @@ public:
 
     bool setStone(int position, CellState player);
 
-    bool isValidMove(int from, int to);
+    bool isValidMove(int from, int to, Player* p);
 
-    bool moveStone(int from, int to);
+    bool moveStone(int from, int to, Player* p);
 
-    bool removeStone(int at);
+    bool removeStone(int at, Player* p);
 
     BoardManager::CellState getCurrentPlayer() const;
 

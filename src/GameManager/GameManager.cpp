@@ -2,11 +2,17 @@
 // Created by Oliver Ilczuk on 06.01.25.
 //
 
-#include "./BoardManager/BoardManager.h"
-#include "GameManager.h"
+#include "../BoardManager/BoardManager.h"
+#include "../Player/Player.h"
+#include "../RuleEngine/RuleEngine.h"
+#include "./GameManager.h"
 #include <fstream>
-#include <termios.h>
-#include <unistd.h>
+#include <vector>
+/*
+    #include <termios.h>
+    #include <unistd.h>
+*/
+
 #include "./Logger/Logger.h"
 
 extern Logger logger;
@@ -50,47 +56,105 @@ void GameManager::gameLoop() {
     logger.log(LogLevel::INFO, "GameManager: Entering game loop.");
 
     bool isRunning = true;
-    isMovingStone = false;
 
     int currentCell = 0;
-    printBoard(this->board_manager, randomPlayerStart(), currentCell);
+    displayBoard(board_manager.cells);
+    runPhaseOne();
 
     while (isRunning) {
-        printBoard(this->board_manager, this->board_manager.getCurrentPlayer(), currentCell);
-        currentCell = moveCursor(this->board_manager, currentCell);
+        logger.log(LogLevel::INFO, "GameManager: Entering second Phase");
+        displayBoard(board_manager.cells);
+        runPhaseTwo(p1);
+        if (rule_engine->isGameOver()) {
+            break;
+        }
+        runPhaseTwo(p2);
+        
 
-        logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
 
-        // Platzhalter für zukünftige RuleEngine-Integration
-        // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
+        isRunning = rule_engine->isGameOver();
     }
 
     logger.log(LogLevel::INFO, "GameManager: Game loop ended.");
 }
 
+void GameManager::runPhaseOne() {
+    for (int i = 0; i < 9; i++) {
+        std::cout << "Player " << p1->name << " 's turn. " << std::endl;
+        int choice = getUserInput(0, 23);
+        board_manager.setStone(choice, p1->identifier);
+        if (rule_engine->isMillFormed(choice, p1->identifier)) {
+            destroyStone(p1, p2, choice);
+        }
+        
+        displayBoard(board_manager.cells);
+
+        std::cout << "Player " << p2->name << " 's turn." << std::endl;
+        choice = getUserInput(0, 23);
+        board_manager.setStone(choice, p2->identifier);
+        if (rule_engine->isMillFormed(choice, p2->identifier)) {
+            destroyStone(p2, p1, choice);
+        }
+
+        displayBoard(board_manager.cells);
+    }
+}
+
+void GameManager::runPhaseTwo(Player* p) {
+    std::cout << "Player " << p->name << " 's turn. Which Stone should move: " << std::endl;
+    int from = getUserInput(0, 23);
+    std::cout << "Where do you wanna place it:" << std::endl;
+    int to = getUserInput(0, 23);
+    board_manager.moveStone(from, to, p);
+    if (rule_engine->isMillFormed(to, p->identifier)) {
+            destroyStone(p1, p2, to);
+        }
+}
+
+void GameManager::destroyStone(Player* killer, Player* victim, int position) {
+    if (rule_engine->isMillFormed(position, killer->identifier)) {
+        std::cout << killer->name << "Wich position do you want to eleminate:" << std::endl;
+        int aim = getUserInput(0, 23);
+        board_manager.removeStone(aim, victim);        
+    }
+}
+
 // ---------- Hilfsmethoden ----------
 
-int GameManager::getUserInput(int min, int max) {
-    struct termios oldt, newt;
-    char ch;
-
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ECHO | ICANON);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
-    int input = -1;
-    do {
-        ch = getchar();
-        if (ch >= '0' + min && ch <= '0' + max) {
-            input = ch - '0';
-        } else {
-            logger.log(LogLevel::WARNING, "GameManager: Invalid input. Please try again.");
+bool isNumber(std::string input) {
+    for (char c : input) {
+        if (!std::isdigit(c)) {
+            return false;
         }
-    } while (input == -1);
+    }
+    return true;
+}
 
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    return input;
+
+int GameManager::getUserInput(int min, int max) {
+    int position;
+    std::string input;
+
+    while (true) {
+        std::cout << "Please enter a position:" << std::endl;
+        std::cin >> input;
+
+        if (!isNumber(input)) {
+            std::cout << "Invalid Input. Please enter a number!" << std::endl;
+            continue;
+        }
+
+        position = std::stoi(input);
+
+        if (position < min || position > max) {
+            std::cout << "Invalid Input. Please enter a number between 0 and 3!" << std::endl;
+            continue;
+        }
+
+        break;
+    }
+    
+    return position;
 }
 
 bool GameManager::random50Percent() {
@@ -106,200 +170,32 @@ void GameManager::clearScreen() {
     std::cout << "\033[2J\033[H";
 }
 
-int readKeyAsInt() {
-    struct termios oldt, newt;
-    char key;
-
-    // Aktuelle Terminal-Einstellungen speichern
-    tcgetattr(STDIN_FILENO, &oldt);
-
-    // Neue Terminal-Einstellungen setzen (Raw-Modus aktivieren)
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO); // Canonical-Mode und Echo deaktivieren
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
-    // Lesen der Tastatureingabe
-    read(STDIN_FILENO, &key, 1);
-
-    // Alte Terminal-Einstellungen wiederherstellen
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-
-    return static_cast<int>(key);
-}
-
-int getKey() {
-    int input = readKeyAsInt(); // Liest die erste Taste
-    if (input == 27) { // Escape-Sequenz beginnt
-        input = readKeyAsInt();
-        if (input == 91) { // '[' erkannt
-            return readKeyAsInt(); // Richtungswert
-        }
-    }
-    return input; // Gibt den ASCII-Wert zurück
-}
-
-
-// Funktion zum Bewegen des Cursors basierend auf Tastatureingaben
-int GameManager::moveCursor(BoardManager& boardManager, int currentCell) {
-
-    while (true) {
-        int key = getKey(); // Liest eine einzelne Taste ein
-
-        // Debug: Welche Taste wurde gedrückt?
-        if (key == 65) {
-            std::cout << "Taste gedrückt: Oben\n";
-        } else if (key == 66) {
-            std::cout << "Taste gedrückt: Unten\n";
-        } else if (key == 67) {
-            std::cout << "Taste gedrückt: Rechts\n";
-        } else if (key == 68) {
-            std::cout << "Taste gedrückt: Links\n";
-        } else if (key == 32) {
-            std::cout << "Taste gedrückt: Leertaste\n";
-        } else if (key == 10) {
-            std::cout << "Taste gedrückt: Enter\n";
-        }
-
-        int nextCell = currentCell;
-        switch (key) {
-            case 65: // Oben
-                for (int neighbor : boardManager.verticalNeighbors[currentCell]) {
-                    if (neighbor < currentCell) {
-                        nextCell = neighbor;
-                        break;
-                    }
-                }
-                break;
-            case 66: // Unten
-                for (int neighbor : boardManager.verticalNeighbors[currentCell]) {
-                    if (neighbor > currentCell) {
-                        nextCell = neighbor;
-                        break;
-                    }
-                }
-                break;
-            case 68: // Links
-                for (int neighbor : boardManager.horizontalNeighbors[currentCell]) {
-                    if (neighbor < currentCell) {
-                        nextCell = neighbor;
-                        break;
-                    }
-                }
-                break;
-            case 67: // Rechts
-                for (int neighbor : boardManager.horizontalNeighbors[currentCell]) {
-                    if (neighbor > currentCell) {
-                        nextCell = neighbor;
-                        break;
-                    }
-                }
-                break;
-            case 32: // Leertaste
-                if (this->isMovingStone) {
-                    std::cout << "isMovingStone: " << this->isMovingStone << "\n";
-                    std::cout << "currentPlayer: " << boardManager.getCurrentPlayer() << "\n";
-                    if (boardManager.getCellState(currentCell) != boardManager.getCurrentPlayer()) {
-                        std::cout << "getCellState(currentCell) != boardManager.getCurrentPlayer :" << boardManager.getCellState(currentCell) << " != " << boardManager.getCurrentPlayer() << "\n";
-                        boardManager.moveStone(movingStoneFrom, currentCell);
-                        this->isMovingStone = false;
-                        this->movingStoneFrom = -1;
-                    } else {
-                        std::cout << "not own cell\n";;
-                    }
-                } else {
-                    std::cout << "setStone" << std::endl;
-                    std::cout << "currentPlayer: " << boardManager.getCurrentPlayer() << "\n";
-
-                    boardManager.setStone(currentCell, boardManager.getCurrentPlayer() == 1 ? BoardManager::CellState::PLAYER1 : BoardManager::CellState::PLAYER2);
-                }
-                break;
-            case 10: // Enter
-                if (boardManager.getCellState(currentCell) != BoardManager::CellState::EMPTY) {
-                    std::cout << "in 10 if\n";
-                    this->isMovingStone = true;
-                    this->movingStoneFrom = currentCell;
-                    break;
-                }
-            std::cout << "out of 10 if\n";
-        }
-
-        // Überprüfen, ob die Bewegung gültig ist
-        if (boardManager.isValidMove(currentCell, nextCell)) {
-            std::cout << "Bewegung gültig: Zelle " << currentCell << " -> Zelle " << nextCell << "\n";
-            return nextCell;
-        } else {
-            return nextCell;
-        }
-    }
-}
-
-
-
-
-
 // ---------- Spielbrett und Einstellungen ----------
 
-void GameManager::printBoard(const BoardManager& boardManager, int currentPlayer, int currentCell = -1) {
-    const std::string player1 = "{ X }";
-    const std::string player2 = "{ O }";
-    const std::string empty = "{   }";
-    const std::string highlighted = "\033[31m"; // ANSI escape code für rote Schrift
-    const std::string beingMoved = "\033[44m"; // ANSI escape code für blaue Schrift
-    const std::string reset = "\033[0m";       // ANSI escape code für Reset
-
-    auto getCellRepresentation = [&](int index, BoardManager::CellState state) -> std::string {
-        std::string cellContent;
+void GameManager::displayBoard(std::vector<BoardManager::CellState> cells) {
+    auto getSymbol = [](BoardManager::CellState state) -> std::string {
         switch (state) {
-            case BoardManager::CellState::PLAYER1: cellContent = player1; break;
-            case BoardManager::CellState::PLAYER2: cellContent = player2; break;
-            case BoardManager::CellState::EMPTY: cellContent = empty; break;
-            default: cellContent = empty; break;
+            case BoardManager::CellState::PLAYER1: return "X";
+            case BoardManager::CellState::PLAYER2: return "O";
+            case BoardManager::CellState::EMPTY:   return ".";
         }
-        if (index == currentCell) {
-            return highlighted + cellContent + reset;
-        }
-        if (index == this->movingStoneFrom) {
-            return beingMoved + cellContent + reset;
-        }
-
-        return cellContent;
+        return "?"; // Fallback für ungültige Zustände
     };
 
-    const auto& cells = boardManager.getCells();
-
-    for (int i = 0; i < cells.size(); ++i) {
-        logger.log(LogLevel::DEBUG, "Cell " + std::to_string(i) + ": " + std::to_string(cells[i]));
-    }
-
-    std::cout << "\033[2J\033[H"; // Bildschirm löschen und Cursor zurücksetzen
-
-    logger.log(LogLevel::INFO, "GameManager: Drawing board.");
-    std::cout << "\n\n\n";
-    std::cout << "				  " << getCellRepresentation(0, cells[0]) << "--------------------" << getCellRepresentation(1, cells[1]) << "--------------------" << getCellRepresentation(2, cells[2]) << "\n";
-    std::cout << "				    |                        |                        |\n";
-    std::cout << "				    |                        |                        |\n";
-    std::cout << "				    |                        |                        |\n";
-    std::cout << "				    |      " << getCellRepresentation(3, cells[3]) << "-----------" << getCellRepresentation(4, cells[4]) << "-----------" << getCellRepresentation(5, cells[5]) << "      |\n";
-    std::cout << "				    |        |               |               |        |\n";
-    std::cout << "				    |        |               |               |        |\n";
-    std::cout << "				    |        |     " << getCellRepresentation(6, cells[6]) << "---" << getCellRepresentation(7, cells[7]) << "---" << getCellRepresentation(8, cells[8]) << "     |        |\n";
-    std::cout << "				    |        |       |               |       |        |\n";
-    std::cout << "				  " << getCellRepresentation(9, cells[9]) << "----" << getCellRepresentation(10, cells[10]) << "---" << getCellRepresentation(11, cells[11]) << "           " << getCellRepresentation(12, cells[12]) << "---" << getCellRepresentation(13, cells[13]) << "----" << getCellRepresentation(14, cells[14]) << "\n";
-    std::cout << "				    |        |       |               |       |        |\n";
-    std::cout << "				    |        |     " << getCellRepresentation(15, cells[15]) << "---" << getCellRepresentation(16, cells[16]) << "---" << getCellRepresentation(17, cells[17]) << "     |        |\n";
-    std::cout << "				    |        |               |               |        |\n";
-    std::cout << "				    |        |               |               |        |\n";
-    std::cout << "				    |      " << getCellRepresentation(18, cells[18]) << "-----------" << getCellRepresentation(19, cells[19]) << "-----------" << getCellRepresentation(20, cells[20]) << "      |\n";
-    std::cout << "				    |                        |                        |\n";
-    std::cout << "				    |                        |                        |\n";
-    std::cout << "				    |                        |                        |\n";
-    std::cout << "				  " << getCellRepresentation(21, cells[21]) << "--------------------" << getCellRepresentation(22, cells[22]) << "--------------------" << getCellRepresentation(23, cells[23]) << "\n";
-    std::cout << "\n\n\n";
-    std::cout << "\t\t\t\t\t\t **Am Zug: Spieler " << (currentPlayer == 1 ? player1 : player2) << "**\n";
-    std::cout << "\t\t\t\t\t\t **currentPlayer: " << currentPlayer << "**\n";
-
-    logger.log(LogLevel::INFO, "GameManager: Player " + std::to_string(currentPlayer) + " is now playing.");
+    // Spielfeld anzeigen (Indexzuordnung folgt einem typischen Mühlespielfeld)
+    std::cout << "\n";
+    std::cout << " " << getSymbol(cells[0]) << "-----------" << getSymbol(cells[1]) << "-----------" << getSymbol(cells[2]) << "\n";
+    std::cout << " |           |           |\n";
+    std::cout << " |   " << getSymbol(cells[8]) << "-------" << getSymbol(cells[9]) << "-------" << getSymbol(cells[10]) << "   |\n";
+    std::cout << " |   |       |       |   |\n";
+    std::cout << " |   |   " << getSymbol(cells[16]) << "---" << getSymbol(cells[17]) << "---" << getSymbol(cells[18]) << "   |   |\n";
+    std::cout << " |   |       |       |   |\n";
+    std::cout << " |   " << getSymbol(cells[11]) << "-------" << getSymbol(cells[12]) << "-------" << getSymbol(cells[13]) << "   |\n";
+    std::cout << " |           |           |\n";
+    std::cout << " " << getSymbol(cells[3]) << "-----------" << getSymbol(cells[4]) << "-----------" << getSymbol(cells[5]) << "\n";
+    std::cout << "\n";
 }
+
 
 void GameManager::handleSettingsMenu() {
     logger.log(LogLevel::INFO, "GameManager: Handling settings menu.");

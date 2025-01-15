@@ -5,20 +5,25 @@
 #ifndef GAMEMANAGER_H
 #define GAMEMANAGER_H
 
-#include "BoardManager/BoardManager.h"
+#include "../BoardManager/BoardManager.h"
+#include "../Player/Player.h"
+#include "../RuleEngine/RuleEngine.h"
+#include <vector>
 
 class GameManager {
 private:
     BoardManager& board_manager;
-    bool isMovingStone;
+    RuleEngine* rule_engine;
+    Player* p1;
+    Player* p2;
     int movingStoneFrom = -1;
+    void runPhaseOne();
+    void runPhaseTwo(Player* p);
 
 public:
     GameManager(BoardManager& board_manager) : board_manager(board_manager) {};
 
-    int moveCursor(BoardManager &boardManager, int currentCell);
-
-    void printBoard(const BoardManager &boardManager, int currentPlayer, int currentCell);
+    void displayBoard(std::vector<BoardManager::CellState> cells);
 
     void gameLoop();
 
@@ -32,13 +37,11 @@ public:
 
     static void clearScreen();
 
-    static char getch();
-
-
     void startNewGame();
     static void handleSettingsMenu();
     static bool loadGame(const std::string& saveFile);
     static bool isSaveFileAvailable();
+    void destroyStone(Player* killer, Player* victim, int position);
 };
 
 #endif // GAMEMANAGER_H

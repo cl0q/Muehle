@@ -3,6 +3,7 @@
 #include "../Logger/Logger.h"
 #include "../Player/Player.h"
 #include <algorithm>
+#include <vector>
 
 extern Logger logger;
 
@@ -28,18 +29,18 @@ bool RuleEngine::millHelper(std::unordered_map<int, std::vector<int>> neighborLi
     }
 }
 
-bool RuleEngine::isMillFormed(int position, BoardManager::CellState identifier) {
+bool RuleEngine::isMillFormed(int position, int identifier) {
 
-    if (position < 0 || position >= bm->cells.size()) {
+    if (position < 0 || position >= board_manager->cells.size()) {
         logger.log(LogLevel::ERROR, "isMillFormed: Position " + std::to_string(position) + " is out of bounds.");
         return false;
     }
 
-    if (millHelper(bm->horizontalNeighbors, bm->cells, position, identifier)) {
+    if (millHelper(board_manager->horizontalNeighbors, board_manager->cells, position, identifier)) {
         return true;
     }
 
-    if (millHelper(bm->verticalNeighbors, bm->cells, position, identifier)) {
+    if (millHelper(board_manager->verticalNeighbors, board_manager->cells, position, identifier)) {
         return true;
     }
     
@@ -48,6 +49,8 @@ bool RuleEngine::isMillFormed(int position, BoardManager::CellState identifier) 
 
 bool RuleEngine::canPlayerJump(Player* p) {
     if (p->getTotalStones() == 3) {
+        std::cout << p->name << " can jump now!!!" << std::endl;
+        p->canJump = true;
         return true;
     } else {
         return false;
@@ -55,26 +58,14 @@ bool RuleEngine::canPlayerJump(Player* p) {
 }
 
 bool RuleEngine::isGameOver() {
-    if (player1->getTotalStones() < 3 || player2->getTotalStones() < 3) {
+    if (player1->getTotalStones() < 3) {
+        std::cout << player2->name << " has won!! Congratulations." << std::endl;
+        return true;
+    }
+
+    if (player2->getTotalStones() < 3) {
+        std::cout << player1->name << " has won!!! Congratulations." << std::endl;
         return true;
     }
     return false;
-}
-
-bool RuleEngine::canGameContinue()
-{
-
-    if (isMillFormed) {
-        return false;
-    } 
-
-    if (canPlayerJump(player1) || canPlayerJump(player2)) {
-        return false;
-    }
-
-    if (isGameOver()) {
-        return false;
-    }
-
-    return true;
 }
