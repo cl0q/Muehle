@@ -50,6 +50,8 @@ public:
     static bool loadGame(const std::string& saveFile);
     static bool isSaveFileAvailable();
 
+    void printPhase();
+
     bool checkMill(int &currentCell, BoardManager::CellState currentPlayer);
 };
 

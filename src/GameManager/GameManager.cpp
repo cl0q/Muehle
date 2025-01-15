@@ -48,8 +48,8 @@ void GameManager::gameLoop() {
     logger.log(LogLevel::INFO, "GameManager: Entering game loop.");
 
     bool isRunningSetPhase = true;
-    bool isRunningMovePhase = true;
-    bool isRunningJumpPhase = true;
+    bool isRunningMovePhase = false;
+    bool isRunningJumpPhase = false;
 
     isMovingStone = false;
     movingStoneFrom = 24;
@@ -64,6 +64,7 @@ void GameManager::gameLoop() {
 
         logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
 
+        printPhase();
         // Platzhalter für zukünftige RuleEngine-Integration
         // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
     }
@@ -73,6 +74,7 @@ void GameManager::gameLoop() {
         currentCell = movePhase(this->board_manager, currentCell);
 
         logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
+        printPhase();
 
         // Platzhalter für zukünftige RuleEngine-Integration
         // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
@@ -83,6 +85,7 @@ void GameManager::gameLoop() {
         currentCell = jumpPhase(this->board_manager, currentCell);
 
         logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
+        printPhase();
 
         // Platzhalter für zukünftige RuleEngine-Integration
         // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
@@ -659,4 +662,16 @@ bool GameManager::isSaveFileAvailable() {
     return file.is_open();
 }
 
-
+void GameManager::printPhase() {
+    switch (this->currentPhase){
+        case 0:
+            std::cout << "Setzphase" << std::endl;
+            break;
+        case 1:
+            std::cout << "Zugphase" << std::endl;
+            break;
+        case 2:
+            std::cout << "Sprungphase" << std::endl;
+            break;
+    }
+}
