@@ -13,11 +13,16 @@ private:
     bool isMovingStone;
     int movingStoneFrom;
     bool pressedEnter;
+    int currentPhase = 0; // 0 = set, 1 = move, 2 = jump
 
 public:
     GameManager(BoardManager& board_manager) : board_manager(board_manager) {};
 
-    int moveCursor(BoardManager &boardManager, int currentCell);
+    int setPhase(BoardManager &boardManager, int currentCell);
+
+    int movePhase(BoardManager &boardManager, int currentCell);
+
+    int jumpPhase(BoardManager &boardManager, int currentCell);
 
     void printStatus(BoardManager &boardManager, int currentCell);
 

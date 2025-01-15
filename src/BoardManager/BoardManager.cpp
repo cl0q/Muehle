@@ -26,9 +26,13 @@ bool BoardManager::setStone(int position, CellState state) {
     logger.log(LogLevel::ERROR, "setStone: CurrentPlayer " + enumToString(getCurrentPlayer()) + " set stone at position " + std::to_string(position) + " for player " + enumToString(state) + ".");
 
     std::cout << "checkMill: " << checkMill(position, state) << std::endl;
-    
-    switchPlayer();
-    return true;
+    if (!checkMill(position, state)) {
+        switchPlayer();
+    } else {
+        //TODO remove stone with backspace
+    }
+
+        return true;
 }
 
 bool BoardManager::isValidMove(int from, int to) {
