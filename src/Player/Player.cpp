@@ -15,3 +15,7 @@ int Player::getStonesPlayed()
 {
     return stonesPlayed;
 }
+
+void Player::decreaseTotalStones() {
+    totalStones--;
+}

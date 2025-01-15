@@ -30,9 +30,16 @@ public:
 
     bool isMillFormed(int position, char symbol);
 
-    bool canPlayerJump(Player p);
+    bool canPlayerJump(Player* p);
 
     bool isGameOver();
+
+    bool isAllowedToKill(int cell) {
+        if (isMillFormed(cell, player1->symbol) || isMillFormed(cell, player2->symbol)) {
+            return false;
+        }
+        return true;
+    }
 
 };
 

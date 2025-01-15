@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <iomanip>
 
-extern Logger logger(LogLevel::INFO, "log.txt");
+// extern Logger logger(LogLevel::INFO, "log.txt");
 
 Logger::Logger(LogLevel level, const std::string& fileName)
     : logLevel(level), logToFile(!fileName.empty()) {

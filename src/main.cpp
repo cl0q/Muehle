@@ -5,24 +5,29 @@
 #include "Player/Player.h"
 
 // Globale Logger-Instanz
-Logger logger(LogLevel::ERROR, "game.log");
+// Logger logger(LogLevel::ERROR, "game.log");
 
 int main() {
     // Instanziiere Manager
-    BoardManager boardManager;
-    GameManager gameManager(boardManager);
-    Player player1(1, BoardManager::PLAYER1);
-    Player player2(2, BoardManager::PLAYER2);
+    Player* player1 = new Player(1, 'X');
+    Player* player2 = new Player(2, 'O');
+
+    BoardManager* boardManager = new BoardManager;
+    
+    
+    RuleEngine* ruleEngine = new RuleEngine{boardManager, player1, player2};
+    GameManager gameManager(player1, player2, ruleEngine, boardManager);
 
     // Terminal leeren und Hauptmenü anzeigen
-    GameManager::clearScreen();
-    logger.log(LogLevel::DEBUG, "Game initialized.");
 
-    boardManager.setStone(0, BoardManager::PLAYER1);
-    boardManager.setStone(1, BoardManager::PLAYER2);
-    boardManager.setStone(23, BoardManager::PLAYER1);
+    if (player1 == nullptr || player2 == nullptr || boardManager == nullptr || ruleEngine == nullptr) {
+        std::cout << "Alarm hier ist ein nullpointer!!!" << std::endl;
+    }
 
-    gameManager.start();
+    std::cout << "Game starts:" << std::endl;
+    gameManager.run();
+
+    
 
     return 0;
 }

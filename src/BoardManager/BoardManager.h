@@ -70,11 +70,9 @@ public:
     }
 
     ~BoardManager() {
-        logger.log(LogLevel::DEBUG, "BoardManager destructor called. Resources freed.");
+        // .log(LogLevel::DEBUG, "BoardManager destructor called. Resources freed.");
 
     }
-
-    BoardManager();
 
     bool setStone(int position, Player* p);
 
@@ -84,20 +82,9 @@ public:
 
     bool removeStone(int at, Player* p);
 
-    BoardManager::CellState getCurrentPlayer() const;
+    bool jumpwithStone(int from, int to, Player* p);
 
-    int switchPlayer();
-
-    std::vector<std::pair<int, CellState>> getNeighborsWithState(int position) const;
-
-    CellState getCellState(int position) const;
-
-    const std::vector<BoardManager::CellState> &getCells() const;
-
-    void initializeNeighbors();
-
-private:
-    int currentPlayer = 1;
+    void displayBoard();
 };
 
 #endif //BOARDMANAGER_H
