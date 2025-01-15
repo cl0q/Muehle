@@ -43,7 +43,6 @@ void GameManager::startNewGame() {
     int startingPlayer = randomPlayerStart();
     logger.log(LogLevel::INFO, "GameManager: Player " + std::to_string(startingPlayer) + " starts the game.");
 
-    printBoard(this->board_manager, startingPlayer);
     gameLoop();
 }
 
@@ -52,20 +51,18 @@ void GameManager::gameLoop() {
 
     bool isRunning = true;
 
-    while (isRunning) {
-        printBoard(this->board_manager, this->board_manager.getCurrentPlayer());
+    int currentCell = 0;
+    printBoard(this->board_manager, randomPlayerStart(), currentCell);
 
+    while (isRunning) {
+        printBoard(this->board_manager, this->board_manager.getCurrentPlayer(), currentCell);
+        currentCell = moveCursor(this->board_manager, currentCell);
+
+        this->board_manager.switchPlayer();
         logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
 
         // Platzhalter für zukünftige RuleEngine-Integration
         // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
-        char exitInput;
-        std::cout << "Spiel beenden? (j/n): ";
-        std::cin >> exitInput;
-
-        if (exitInput == 'j' || exitInput == 'J') {
-            isRunning = false;
-        }
     }
 
     logger.log(LogLevel::INFO, "GameManager: Game loop ended.");
@@ -109,21 +106,126 @@ void GameManager::clearScreen() {
     std::cout << "\033[2J\033[H";
 }
 
+// Funktion zum Lesen eines einzelnen Zeichens von der Tastatur
+char GameManager::getch() {
+    struct termios oldt, newt;
+    char ch;
+
+    // Aktuelle Terminal-Einstellungen speichern
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+
+    // Echo und Canonical Mode deaktivieren
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+    // Zeichen lesen
+    ch = getchar();
+
+    // Ursprüngliche Terminal-Einstellungen wiederherstellen
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+
+    return ch;
+}
+
+// Funktion zum Bewegen des Cursors basierend auf Tastatureingaben
+int GameManager::moveCursor(BoardManager& boardManager, int currentCell) {
+    while (true) {
+        std::cout << "Drücke eine Pfeiltaste: ";
+        char input = getch(); // Liest eine einzelne Taste ein
+        char arrowKey = '\0';
+
+        // Pfeiltasten erkennen (Escape-Sequenz: 27, 91, [65-68])
+        if (input == 27) { // Escape
+            input = getch();
+            if (input == 91) { // '['
+                arrowKey = getch(); // Richtungswert
+            }
+        }
+
+        // Debug: Welche Taste wurde gedrückt?
+        if (arrowKey == 65) {
+            std::cout << "Taste gedrückt: Oben\n";
+        } else if (arrowKey == 66) {
+            std::cout << "Taste gedrückt: Unten\n";
+        } else if (arrowKey == 67) {
+            std::cout << "Taste gedrückt: Rechts\n";
+        } else if (arrowKey == 68) {
+            std::cout << "Taste gedrückt: Links\n";
+        } else {
+            std::cout << "Ungültige Eingabe. Nur Pfeiltasten erlaubt.\n";
+            continue;
+        }
+
+        int nextCell = currentCell;
+        switch (arrowKey) {
+            case 65: // Oben
+                for (int neighbor : boardManager.verticalNeighbors[currentCell]) {
+                    if (neighbor < currentCell) {
+                        nextCell = neighbor;
+                        break;
+                    }
+                }
+                break;
+            case 66: // Unten
+                for (int neighbor : boardManager.verticalNeighbors[currentCell]) {
+                    if (neighbor > currentCell) {
+                        nextCell = neighbor;
+                        break;
+                    }
+                }
+                break;
+            case 68: // Links
+                for (int neighbor : boardManager.horizontalNeighbors[currentCell]) {
+                    if (neighbor < currentCell) {
+                        nextCell = neighbor;
+                        break;
+                    }
+                }
+                break;
+            case 67: // Rechts
+                for (int neighbor : boardManager.horizontalNeighbors[currentCell]) {
+                    if (neighbor > currentCell) {
+                        nextCell = neighbor;
+                        break;
+                    }
+                }
+                break;
+        }
+
+        // Überprüfen, ob die Bewegung gültig ist
+        if (boardManager.isValidMove(currentCell, nextCell)) {
+            std::cout << "Bewegung gültig: Zelle " << currentCell << " -> Zelle " << nextCell << "\n";
+            return nextCell;
+        } else {
+            std::cout << "Ungültige Bewegung. Bitte eine gültige Richtung wählen.\n";
+        }
+    }
+}
+
+
 
 // ---------- Spielbrett und Einstellungen ----------
 
-void GameManager::printBoard(const BoardManager& boardManager, int currentPlayer) {
+void GameManager::printBoard(const BoardManager& boardManager, int currentPlayer, int currentCell = -1) {
     const std::string player1 = "{ X }";
     const std::string player2 = "{ O }";
     const std::string empty = "{   }";
+    const std::string highlighted = "\033[31m"; // ANSI escape code für rote Schrift
+    const std::string reset = "\033[0m";       // ANSI escape code für Reset
 
-    auto getCellRepresentation = [&](BoardManager::CellState state) -> std::string {
+    auto getCellRepresentation = [&](int index, BoardManager::CellState state) -> std::string {
+        std::string cellContent;
         switch (state) {
-            case BoardManager::PLAYER1: return player1;
-            case BoardManager::PLAYER2: return player2;
-            case BoardManager::EMPTY: return empty;
-            default: return empty;
+            case BoardManager::CellState::PLAYER1: cellContent = player1; break;
+            case BoardManager::CellState::PLAYER2: cellContent = player2; break;
+            case BoardManager::CellState::EMPTY: cellContent = empty; break;
+            default: cellContent = empty; break;
         }
+        if (index == currentCell) {
+            return highlighted + cellContent + reset;
+        }
+        return cellContent;
     };
 
     const auto& cells = boardManager.getCells();
@@ -136,25 +238,25 @@ void GameManager::printBoard(const BoardManager& boardManager, int currentPlayer
 
     logger.log(LogLevel::INFO, "GameManager: Drawing board.");
     std::cout << "\n\n\n";
-    std::cout << "				  " << getCellRepresentation(cells[0]) << "--------------------" << getCellRepresentation(cells[1]) << "--------------------" << getCellRepresentation(cells[2]) << "\n";
+    std::cout << "				  " << getCellRepresentation(0, cells[0]) << "--------------------" << getCellRepresentation(1, cells[1]) << "--------------------" << getCellRepresentation(2, cells[2]) << "\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
-    std::cout << "				    |      " << getCellRepresentation(cells[3]) << "-----------" << getCellRepresentation(cells[4]) << "-----------" << getCellRepresentation(cells[5]) << "      |\n";
+    std::cout << "				    |      " << getCellRepresentation(3, cells[3]) << "-----------" << getCellRepresentation(4, cells[4]) << "-----------" << getCellRepresentation(5, cells[5]) << "      |\n";
     std::cout << "				    |        |               |               |        |\n";
     std::cout << "				    |        |               |               |        |\n";
-    std::cout << "				    |        |     " << getCellRepresentation(cells[6]) << "---" << getCellRepresentation(cells[7]) << "---" << getCellRepresentation(cells[8]) << "     |        |\n";
+    std::cout << "				    |        |     " << getCellRepresentation(6, cells[6]) << "---" << getCellRepresentation(7, cells[7]) << "---" << getCellRepresentation(8, cells[8]) << "     |        |\n";
     std::cout << "				    |        |       |               |       |        |\n";
-    std::cout << "				  " << getCellRepresentation(cells[9]) << "    " << getCellRepresentation(cells[10]) << "   " << getCellRepresentation(cells[11]) << "           " << getCellRepresentation(cells[12]) << "   " << getCellRepresentation(cells[13]) << "    " << getCellRepresentation(cells[14]) << "\n";
+    std::cout << "				  " << getCellRepresentation(9, cells[9]) << "----" << getCellRepresentation(10, cells[10]) << "---" << getCellRepresentation(11, cells[11]) << "           " << getCellRepresentation(12, cells[12]) << "---" << getCellRepresentation(13, cells[13]) << "----" << getCellRepresentation(14, cells[14]) << "\n";
     std::cout << "				    |        |       |               |       |        |\n";
-    std::cout << "				    |        |     " << getCellRepresentation(cells[15]) << "---" << getCellRepresentation(cells[16]) << "---" << getCellRepresentation(cells[17]) << "     |        |\n";
+    std::cout << "				    |        |     " << getCellRepresentation(15, cells[15]) << "---" << getCellRepresentation(16, cells[16]) << "---" << getCellRepresentation(17, cells[17]) << "     |        |\n";
     std::cout << "				    |        |               |               |        |\n";
     std::cout << "				    |        |               |               |        |\n";
-    std::cout << "				    |      " << getCellRepresentation(cells[18]) << "-----------" << getCellRepresentation(cells[19]) << "-----------" << getCellRepresentation(cells[20]) << "      |\n";
+    std::cout << "				    |      " << getCellRepresentation(18, cells[18]) << "-----------" << getCellRepresentation(19, cells[19]) << "-----------" << getCellRepresentation(20, cells[20]) << "      |\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
-    std::cout << "				  " << getCellRepresentation(cells[21]) << "--------------------" << getCellRepresentation(cells[22]) << "--------------------" << getCellRepresentation(cells[23]) << "\n";
+    std::cout << "				  " << getCellRepresentation(21, cells[21]) << "--------------------" << getCellRepresentation(22, cells[22]) << "--------------------" << getCellRepresentation(23, cells[23]) << "\n";
     std::cout << "\n\n\n";
     std::cout << "\t\t\t\t\t\t **Am Zug: Spieler " << (currentPlayer == 1 ? player1 : player2) << "**\n";
 

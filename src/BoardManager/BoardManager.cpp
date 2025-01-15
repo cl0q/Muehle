@@ -90,6 +90,11 @@ int BoardManager::getCurrentPlayer() const {
         return currentPlayer;
     }
 
+int BoardManager::switchPlayer() {
+    currentPlayer = currentPlayer == 1 ? 2 : 1;
+    return currentPlayer;
+}
+
 std::vector<std::pair<int, BoardManager::CellState>> BoardManager::getNeighborsWithState(int position) const {
     std::vector<std::pair<int, CellState>> neighborsWithState;
 

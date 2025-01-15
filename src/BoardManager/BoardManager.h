@@ -38,6 +38,8 @@ public:
 
     int getCurrentPlayer() const;
 
+    int switchPlayer();
+
     std::vector<std::pair<int, CellState>> getNeighborsWithState(int position) const;
 
     CellState getCellState(int position) const;

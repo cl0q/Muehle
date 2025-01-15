@@ -14,7 +14,9 @@ private:
 public:
     GameManager(BoardManager& board_manager) : board_manager(board_manager) {};
 
-    static void printBoard(const BoardManager &boardManager, int currentPlayer);
+    static int moveCursor(BoardManager &boardManager, int currentCell);
+
+    static void printBoard(const BoardManager &boardManager, int currentPlayer, int currentCell);
 
     void gameLoop();
 
@@ -27,6 +29,8 @@ public:
     static int randomPlayerStart();
 
     static void clearScreen();
+
+    static char getch();
 
     void startNewGame();
     static void handleSettingsMenu();
