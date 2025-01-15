@@ -190,14 +190,10 @@ int GameManager::moveCursor(BoardManager& boardManager, int currentCell) {
                 pressedEnter = false;
 
             std::cout << "[SPACE HIT]" << std::endl;
-            printStatus(boardManager, currentCell);
 
 
                 if (!isMovingStone) {
                     std::cout << "[SPACE SET] Leertaste gedrückt" << std::endl << "currentCell: " << currentCell << " belongs to : " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
-
-                    printStatus(boardManager, currentCell);
-
 
                     boardManager.setStone(currentCell, boardManager.getCurrentPlayer());
                     break;
@@ -209,13 +205,9 @@ int GameManager::moveCursor(BoardManager& boardManager, int currentCell) {
 
                     isMovingStone = false;
                     this->movingStoneFrom = -1;
-
-                        printStatus(boardManager, currentCell);
-
                         break;
                     }
                     break;
-
                 }
             case 10: // Enter
                 if (boardManager.getCellState(currentCell) == boardManager.getCurrentPlayer()) {
@@ -229,8 +221,6 @@ int GameManager::moveCursor(BoardManager& boardManager, int currentCell) {
                         std::cout << "set isMovingStone: " << isMovingStone << std::endl;
                         this->movingStoneFrom = currentCell;
 
-                        printStatus(boardManager, currentCell);
-
                         break;
                     }
                     if (pressedEnter && currentCell == this->movingStoneFrom) {
@@ -238,10 +228,8 @@ int GameManager::moveCursor(BoardManager& boardManager, int currentCell) {
                         pressedEnter = false;
                         this->isMovingStone = false;
                         std::cout << "set isMovingStone: " << isMovingStone << std::endl;
-
                         this->movingStoneFrom = -1;
 
-                        printStatus(boardManager, currentCell);
                         break;
                     }
                 }
@@ -249,6 +237,8 @@ int GameManager::moveCursor(BoardManager& boardManager, int currentCell) {
 
 
         }
+
+        printStatus(boardManager, currentCell);
 
         // Überprüfen, ob die Bewegung gültig ist
         if (boardManager.isValidMove(currentCell, nextCell)) {
@@ -266,10 +256,21 @@ void GameManager::printStatus(BoardManager& boardManager, int currentCell) {
                         << "currentCell: " << currentCell << std::endl
                         << "movingStoneFrom: " << this->movingStoneFrom << std::endl
                         << "currentPlayer: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl
-                    << "cellState: " << boardManager.enumToString(boardManager.getCellState(currentCell)) << std::endl;
+                    << "last cellState: " << boardManager.enumToString(boardManager.getCellState(currentCell)) << std::endl
+                    <<  "sumStones : " << getPlacedStones() << std::endl;
 }
 
+int GameManager::getPlacedStones() {
+    int sumStones = 0;
 
+    for (int i = 0; i < this->board_manager.getCells().size(); ++i) {
+        if (this->board_manager.getCells()[i] != BoardManager::CellState::EMPTY) {
+            //std::cout << "sumStones index: " << i << " cellState: " << this->board_manager.enumToString(this->board_manager.getCells()[i]) << std::endl;
+            sumStones++;
+        }
+    }
+    return sumStones;
+}
 
 // ---------- Spielbrett und Einstellungen ----------
 
@@ -304,63 +305,63 @@ void GameManager::printBoard(const BoardManager& boardManager, BoardManager::Cel
     const auto& cells = boardManager.getCells();
 
     for (int i = 0; i < cells.size(); ++i) {
-        logger.log(LogLevel::DEBUG, "Cell " + std::to_string(i) + ": " + std::to_string(cells[i]));
+        logger.log(LogLevel::DEBUG, "Cell " + std::to_string(i) + ": " + std::to_string(this->board_manager.cells[i]));
     }
 
     //std::cout << "\033[2J\033[H"; // Bildschirm löschen und Cursor zurücksetzen
 
     logger.log(LogLevel::INFO, "GameManager: Drawing board.");
     std::cout << "\n\n\n";
-    std::cout << "				  " << getCellRepresentation(0, cells[0]) << "--------------------" << getCellRepresentation(1, cells[1]) << "--------------------" << getCellRepresentation(2, cells[2]) << "\n";
+    std::cout << "				  " << getCellRepresentation(0, this->board_manager.cells[0]) << "--------------------" << getCellRepresentation(1, this->board_manager.cells[1]) << "--------------------" << getCellRepresentation(2, this->board_manager.cells[2]) << "\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
-    std::cout << "				    |      " << getCellRepresentation(3, cells[3]) << "-----------" << getCellRepresentation(4, cells[4]) << "-----------" << getCellRepresentation(5, cells[5]) << "      |\n";
+    std::cout << "				    |      " << getCellRepresentation(3, this->board_manager.cells[3]) << "-----------" << getCellRepresentation(4, this->board_manager.cells[4]) << "-----------" << getCellRepresentation(5, this->board_manager.cells[5]) << "      |\n";
     std::cout << "				    |        |               |               |        |\n";
     std::cout << "				    |        |               |               |        |\n";
-    std::cout << "				    |        |     " << getCellRepresentation(6, cells[6]) << "---" << getCellRepresentation(7, cells[7]) << "---" << getCellRepresentation(8, cells[8]) << "     |        |\n";
+    std::cout << "				    |        |     " << getCellRepresentation(6, this->board_manager.cells[6]) << "---" << getCellRepresentation(7, this->board_manager.cells[7]) << "---" << getCellRepresentation(8, this->board_manager.cells[8]) << "     |        |\n";
     std::cout << "				    |        |       |               |       |        |\n";
-    std::cout << "				  " << getCellRepresentation(9, cells[9]) << "----" << getCellRepresentation(10, cells[10]) << "---" << getCellRepresentation(11, cells[11]) << "           " << getCellRepresentation(12, cells[12]) << "---" << getCellRepresentation(13, cells[13]) << "----" << getCellRepresentation(14, cells[14]) << "\n";
+    std::cout << "				  " << getCellRepresentation(9, this->board_manager.cells[9]) << "----" << getCellRepresentation(10, this->board_manager.cells[10]) << "---" << getCellRepresentation(11, this->board_manager.cells[11]) << "           " << getCellRepresentation(12, this->board_manager.cells[12]) << "---" << getCellRepresentation(13, this->board_manager.cells[13]) << "----" << getCellRepresentation(14, this->board_manager.cells[14]) << "\n";
     std::cout << "				    |        |       |               |       |        |\n";
-    std::cout << "				    |        |     " << getCellRepresentation(15, cells[15]) << "---" << getCellRepresentation(16, cells[16]) << "---" << getCellRepresentation(17, cells[17]) << "     |        |\n";
+    std::cout << "				    |        |     " << getCellRepresentation(15, this->board_manager.cells[15]) << "---" << getCellRepresentation(16, this->board_manager.cells[16]) << "---" << getCellRepresentation(17, this->board_manager.cells[17]) << "     |        |\n";
     std::cout << "				    |        |               |               |        |\n";
     std::cout << "				    |        |               |               |        |\n";
-    std::cout << "				    |      " << getCellRepresentation(18, cells[18]) << "-----------" << getCellRepresentation(19, cells[19]) << "-----------" << getCellRepresentation(20, cells[20]) << "      |\n";
+    std::cout << "				    |      " << getCellRepresentation(18, this->board_manager.cells[18]) << "-----------" << getCellRepresentation(19, this->board_manager.cells[19]) << "-----------" << getCellRepresentation(20, this->board_manager.cells[20]) << "      |\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
-    std::cout << "				  " << getCellRepresentation(21, cells[21]) << "--------------------" << getCellRepresentation(22, cells[22]) << "--------------------" << getCellRepresentation(23, cells[23]) << "\n";
+    std::cout << "				  " << getCellRepresentation(21, this->board_manager.cells[21]) << "--------------------" << getCellRepresentation(22, this->board_manager.cells[22]) << "--------------------" << getCellRepresentation(23, this->board_manager.cells[23]) << "\n";
     std::cout << "\n\n\n";
     std::cout << "\t\t\t\t\t\t **Am Zug: Spieler " << (currentPlayer == 1 ? player2 : player1) << "**\n";
     std::cout << "\t\t\t\t\t\t **currentPlayer: " << this->board_manager.enumToString(currentPlayer) << "**\n";
 
 
         std::cout << "\n\n\n";
-    std::cout << "				  " << this->board_manager.enumToString(cells[0]) << "--------------------" << this->board_manager.enumToString(cells[1]) << "--------------------" << this->board_manager.enumToString(cells[2]) << "\n";
+    std::cout << "				  " << this->board_manager.enumToString(this->board_manager.cells[0]) << "--------------------" << this->board_manager.enumToString(this->board_manager.cells[1]) << "--------------------" << this->board_manager.enumToString(this->board_manager.cells[2]) << "\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
-    std::cout << "				    |      " << this->board_manager.enumToString(cells[3]) << "-----------" << this->board_manager.enumToString(cells[4]) << "-----------" << this->board_manager.enumToString(cells[5]) << "      |\n";
+    std::cout << "				    |      " << this->board_manager.enumToString(this->board_manager.cells[3]) << "-----------" << this->board_manager.enumToString(this->board_manager.cells[4]) << "-----------" << this->board_manager.enumToString(this->board_manager.cells[5]) << "      |\n";
     std::cout << "				    |        |               |               |        |\n";
     std::cout << "				    |        |               |               |        |\n";
-    std::cout << "				    |        |     " << this->board_manager.enumToString(cells[6]) << "---" << this->board_manager.enumToString(cells[7]) << "---" << this->board_manager.enumToString(cells[8]) << "     |        |\n";
+    std::cout << "				    |        |     " << this->board_manager.enumToString(this->board_manager.cells[6]) << "---" << this->board_manager.enumToString(this->board_manager.cells[7]) << "---" << this->board_manager.enumToString(this->board_manager.cells[8]) << "     |        |\n";
     std::cout << "				    |        |       |               |       |        |\n";
-    std::cout << "				  " << this->board_manager.enumToString(cells[9]) << "----" << this->board_manager.enumToString(cells[10]) << "---" << this->board_manager.enumToString(cells[11]) << "           " << this->board_manager.enumToString(cells[12]) << "---" << this->board_manager.enumToString(cells[13]) << "----" << this->board_manager.enumToString(cells[14]) << "\n";
+    std::cout << "				  " << this->board_manager.enumToString(this->board_manager.cells[9]) << "----" << this->board_manager.enumToString(this->board_manager.cells[10]) << "---" << this->board_manager.enumToString(this->board_manager.cells[11]) << "           " << this->board_manager.enumToString(this->board_manager.cells[12]) << "---" << this->board_manager.enumToString(this->board_manager.cells[13]) << "----" << this->board_manager.enumToString(this->board_manager.cells[14]) << "\n";
     std::cout << "				    |        |       |               |       |        |\n";
-    std::cout << "				    |        |     " << this->board_manager.enumToString(cells[15]) << "---" << this->board_manager.enumToString(cells[16]) << "---" << this->board_manager.enumToString(cells[17]) << "     |        |\n";
+    std::cout << "				    |        |     " << this->board_manager.enumToString(this->board_manager.cells[15]) << "---" << this->board_manager.enumToString(this->board_manager.cells[16]) << "---" << this->board_manager.enumToString(this->board_manager.cells[17]) << "     |        |\n";
     std::cout << "				    |        |               |               |        |\n";
     std::cout << "				    |        |               |               |        |\n";
-    std::cout << "				    |      " << this->board_manager.enumToString(cells[18]) << "-----------" << this->board_manager.enumToString(cells[19]) << "-----------" << this->board_manager.enumToString(cells[20]) << "      |\n";
+    std::cout << "				    |      " << this->board_manager.enumToString(this->board_manager.cells[18]) << "-----------" << this->board_manager.enumToString(this->board_manager.cells[19]) << "-----------" << this->board_manager.enumToString(this->board_manager.cells[20]) << "      |\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
-    std::cout << "				  " << this->board_manager.enumToString(cells[21]) << "--------------------" << this->board_manager.enumToString(cells[22]) << "--------------------" << this->board_manager.enumToString(cells[23]) << "\n";
+    std::cout << "				  " << this->board_manager.enumToString(this->board_manager.cells[21]) << "--------------------" << this->board_manager.enumToString(this->board_manager.cells[22]) << "--------------------" << this->board_manager.enumToString(this->board_manager.cells[23]) << "\n";
     std::cout << "\n\n\n";
 
 
 
     for (int i = 0; i < cells.size(); ++i) {
-        logger.log(LogLevel::DEBUG, "cellState " + std::to_string(i) + ": " + this->board_manager.enumToString(cells[i]));
+        logger.log(LogLevel::DEBUG, "cellState " + std::to_string(i) + ": " + this->board_manager.enumToString(this->board_manager.cells[i]));
     }
 
     logger.log(LogLevel::INFO, "GameManager: Player " + this->board_manager.enumToString(currentPlayer) + " " + " is now playing.");
@@ -395,3 +396,5 @@ bool GameManager::isSaveFileAvailable() {
     std::ifstream file("game_save.dat");
     return file.is_open();
 }
+
+

@@ -25,6 +25,8 @@ bool BoardManager::setStone(int position, CellState state) {
 
     logger.log(LogLevel::ERROR, "setStone: CurrentPlayer " + enumToString(getCurrentPlayer()) + " set stone at position " + std::to_string(position) + " for player " + enumToString(state) + ".");
 
+    std::cout << "checkMill: " << checkMill(position, state) << std::endl;
+    
     switchPlayer();
     return true;
 }
@@ -219,4 +221,162 @@ void BoardManager::initializeNeighbors() {
     horizontalNeighbors[21] = {22};
     horizontalNeighbors[22] = {21, 23};
     horizontalNeighbors[23] = {22};
+}
+
+bool BoardManager::checkMill(int& currentCell, BoardManager::CellState currentPlayer) {
+
+    if (currentCell == 0) {
+        if (this->cells[0] == currentPlayer && this->cells[1] == currentPlayer && this->cells[2] == currentPlayer) { return true; }
+        if (this->cells[0] == currentPlayer && this->cells[9] == currentPlayer && this->cells[21] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 1) {
+        if (this->cells[0] == currentPlayer && this->cells[1] == currentPlayer && this->cells[2] == currentPlayer) { return true; }
+        if (this->cells[1] == currentPlayer && this->cells[4] == currentPlayer && this->cells[7] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 2) {
+        if (this->cells[0] == currentPlayer && this->cells[1] == currentPlayer && this->cells[2] == currentPlayer) { return true; }
+        if (this->cells[2] == currentPlayer && this->cells[14] == currentPlayer && this->cells[23] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 3) {
+        if (this->cells[3] == currentPlayer && this->cells[4] == currentPlayer && this->cells[5] == currentPlayer) { return true; }
+        if (this->cells[3] == currentPlayer && this->cells[10] == currentPlayer && this->cells[18] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 4) {
+        if (this->cells[3] == currentPlayer && this->cells[4] == currentPlayer && this->cells[5] == currentPlayer) { return true; }
+        if (this->cells[1] == currentPlayer && this->cells[4] == currentPlayer && this->cells[7] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 5) {
+        if (this->cells[3] == currentPlayer && this->cells[4] == currentPlayer && this->cells[5] == currentPlayer) { return true; }
+    }
+
+    if (currentCell == 6 ) {
+        if (this->cells[6] == currentPlayer && this->cells[7] == currentPlayer && this->cells[8] == currentPlayer) { return true; }
+        if (this->cells[6] == currentPlayer && this->cells[11] == currentPlayer && this->cells[15] == currentPlayer) { return true; }
+    }
+
+    if (currentCell == 7) {
+        if (this->cells[6] == currentPlayer && this->cells[7] == currentPlayer && this->cells[8] == currentPlayer) { return true; }
+        if (this->cells[1] == currentPlayer && this->cells[4] == currentPlayer && this->cells[7] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 8) {
+        if (this->cells[9] == currentPlayer && this->cells[10] == currentPlayer && this->cells[11] == currentPlayer) { return true; }
+        if (this->cells[8] == currentPlayer && this->cells[12] == currentPlayer && this->cells[17] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 9) {
+        if (this->cells[9] == currentPlayer && this->cells[10] == currentPlayer && this->cells[11] == currentPlayer) { return true; }
+        if (this->cells[0] == currentPlayer && this->cells[9] == currentPlayer && this->cells[21] == currentPlayer) { return true; }
+
+
+    }
+
+    if (currentCell == 10) {
+        if (this->cells[9] == currentPlayer && this->cells[10] == currentPlayer && this->cells[11] == currentPlayer) { return true; }
+        if (this->cells[3] == currentPlayer && this->cells[10] == currentPlayer && this->cells[18] == currentPlayer) { return true; }
+
+
+    }if (currentCell == 11) {
+        if (this->cells[9] == currentPlayer && this->cells[10] == currentPlayer && this->cells[11] == currentPlayer) { return true; }
+        if (this->cells[6] == currentPlayer && this->cells[11] == currentPlayer && this->cells[15] == currentPlayer) { return true; }
+    }
+
+    if (currentCell == 12) {
+        if (this->cells[12] == currentPlayer && this->cells[13] == currentPlayer && this->cells[14] == currentPlayer) { return true; }
+        if (this->cells[8] == currentPlayer && this->cells[12] == currentPlayer && this->cells[17] == currentPlayer) { return true; }
+
+    }
+    if (currentCell == 13) {
+        if (this->cells[12] == currentPlayer && this->cells[13] == currentPlayer && this->cells[14] == currentPlayer) { return true; }
+
+    }
+    if (currentCell == 14) {
+        if (this->cells[12] == currentPlayer && this->cells[13] == currentPlayer && this->cells[14] == currentPlayer) { return true; }
+        if (this->cells[2] == currentPlayer && this->cells[14] == currentPlayer && this->cells[23] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 15) {
+        if (this->cells[15] == currentPlayer && this->cells[16] == currentPlayer && this->cells[17] == currentPlayer) { return true; }
+        if (this->cells[6] == currentPlayer && this->cells[11] == currentPlayer && this->cells[15] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 16) {
+        if (this->cells[15] == currentPlayer && this->cells[16] == currentPlayer && this->cells[17] == currentPlayer) { return true; }
+        if (this->cells[16] == currentPlayer && this->cells[19] == currentPlayer && this->cells[22] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 17) {
+        if (this->cells[15] == currentPlayer && this->cells[16] == currentPlayer && this->cells[17] == currentPlayer) { return true; }
+        if (this->cells[8] == currentPlayer && this->cells[12] == currentPlayer && this->cells[17] == currentPlayer) { return true; }
+
+    }
+
+    if ( currentCell == 18) {
+        if (this->cells[18] == currentPlayer && this->cells[19] == currentPlayer && this->cells[20] == currentPlayer) { return true; }
+        if (this->cells[3] == currentPlayer && this->cells[10] == currentPlayer && this->cells[18] == currentPlayer) { return true; }
+
+    }
+
+    if ( currentCell == 19) {
+        if (this->cells[18] == currentPlayer && this->cells[19] == currentPlayer && this->cells[20] == currentPlayer) { return true; }
+        if (this->cells[16] == currentPlayer && this->cells[19] == currentPlayer && this->cells[22] == currentPlayer) { return true; }
+
+    }
+
+    if ( currentCell == 20) {
+        if (this->cells[18] == currentPlayer && this->cells[19] == currentPlayer && this->cells[20] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 21) {
+        if (this->cells[21] == currentPlayer && this->cells[22] == currentPlayer && this->cells[23] == currentPlayer) { return true; }
+        if (this->cells[0] == currentPlayer && this->cells[9] == currentPlayer && this->cells[21] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 22) {
+        if (this->cells[21] == currentPlayer && this->cells[22] == currentPlayer && this->cells[23] == currentPlayer) { return true; }
+        if (this->cells[16] == currentPlayer && this->cells[19] == currentPlayer && this->cells[22] == currentPlayer) { return true; }
+
+    }
+
+    if (currentCell == 23) {
+        if (this->cells[21] == currentPlayer && this->cells[22] == currentPlayer && this->cells[23] == currentPlayer) { return true; }
+        if (this->cells[2] == currentPlayer && this->cells[14] == currentPlayer && this->cells[23] == currentPlayer) { return true; }
+
+    }
+    /*
+    if (this->cells[0] == currentPlayer && this->cells[1] == currentPlayer && this->cells[2] == currentPlayer) { return true; }
+    if (this->cells[3] == currentPlayer && this->cells[4] == currentPlayer && this->cells[5] == currentPlayer) { return true; }
+    if (this->cells[9] == currentPlayer && this->cells[10] == currentPlayer && this->cells[11] == currentPlayer) { return true; }
+    if (this->cells[12] == currentPlayer && this->cells[13] == currentPlayer && this->cells[14] == currentPlayer) { return true; }
+    if (this->cells[15] == currentPlayer && this->cells[16] == currentPlayer && this->cells[17] == currentPlayer) { return true; }
+    if (this->cells[18] == currentPlayer && this->cells[19] == currentPlayer && this->cells[20] == currentPlayer) { return true; }
+    if (this->cells[21] == currentPlayer && this->cells[22] == currentPlayer && this->cells[23] == currentPlayer) { return true; }
+
+    if (this->cells[0] == currentPlayer && this->cells[9] == currentPlayer && this->cells[21] == currentPlayer) { return true; }
+    if (this->cells[3] == currentPlayer && this->cells[10] == currentPlayer && this->cells[18] == currentPlayer) { return true; }
+    if (this->cells[6] == currentPlayer && this->cells[11] == currentPlayer && this->cells[15] == currentPlayer) { return true; }
+    if (this->cells[1] == currentPlayer && this->cells[4] == currentPlayer && this->cells[7] == currentPlayer) { return true; }
+    if (this->cells[16] == currentPlayer && this->cells[19] == currentPlayer && this->cells[22] == currentPlayer) { return true; }
+    if (this->cells[8] == currentPlayer && this->cells[12] == currentPlayer && this->cells[17] == currentPlayer) { return true; }
+    if (this->cells[2] == currentPlayer && this->cells[14] == currentPlayer && this->cells[23] == currentPlayer) { return true; }
+
+ */
+    return false;
 }

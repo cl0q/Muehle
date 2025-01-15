@@ -50,6 +50,8 @@ public:
 
     void initializeNeighbors();
 
+    bool checkMill(int &currentCell, CellState currentPlayer);
+
     void setCurrentPlayer(int currentPlayer);
 
 private:

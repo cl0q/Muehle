@@ -21,6 +21,8 @@ public:
 
     void printStatus(BoardManager &boardManager, int currentCell);
 
+    int getPlacedStones();
+
     void printBoard(const BoardManager &boardManager, BoardManager::CellState currentPlayer, int currentCell);
 
     void gameLoop();
@@ -42,6 +44,8 @@ public:
     static void handleSettingsMenu();
     static bool loadGame(const std::string& saveFile);
     static bool isSaveFileAvailable();
+
+    bool checkMill(int &currentCell, BoardManager::CellState currentPlayer);
 };
 
 #endif // GAMEMANAGER_H
