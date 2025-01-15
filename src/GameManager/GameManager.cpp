@@ -50,6 +50,7 @@ void GameManager::gameLoop() {
     logger.log(LogLevel::INFO, "GameManager: Entering game loop.");
 
     bool isRunning = true;
+    isMovingStone = false;
 
     int currentCell = 0;
     printBoard(this->board_manager, randomPlayerStart(), currentCell);
@@ -58,7 +59,6 @@ void GameManager::gameLoop() {
         printBoard(this->board_manager, this->board_manager.getCurrentPlayer(), currentCell);
         currentCell = moveCursor(this->board_manager, currentCell);
 
-        this->board_manager.switchPlayer();
         logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
 
         // Platzhalter für zukünftige RuleEngine-Integration
@@ -99,66 +99,69 @@ bool GameManager::random50Percent() {
 }
 
 int GameManager::randomPlayerStart() {
-    return random50Percent() ? 1 : 2;
+    return random50Percent() ? 0 : 1;
 }
 
 void GameManager::clearScreen() {
     std::cout << "\033[2J\033[H";
 }
 
-// Funktion zum Lesen eines einzelnen Zeichens von der Tastatur
-char GameManager::getch() {
+int readKeyAsInt() {
     struct termios oldt, newt;
-    char ch;
+    char key;
 
     // Aktuelle Terminal-Einstellungen speichern
     tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
 
-    // Echo und Canonical Mode deaktivieren
-    newt.c_lflag &= ~(ICANON | ECHO);
+    // Neue Terminal-Einstellungen setzen (Raw-Modus aktivieren)
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO); // Canonical-Mode und Echo deaktivieren
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-    // Zeichen lesen
-    ch = getchar();
+    // Lesen der Tastatureingabe
+    read(STDIN_FILENO, &key, 1);
 
-    // Ursprüngliche Terminal-Einstellungen wiederherstellen
+    // Alte Terminal-Einstellungen wiederherstellen
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
-    return ch;
+    return static_cast<int>(key);
 }
+
+int getKey() {
+    int input = readKeyAsInt(); // Liest die erste Taste
+    if (input == 27) { // Escape-Sequenz beginnt
+        input = readKeyAsInt();
+        if (input == 91) { // '[' erkannt
+            return readKeyAsInt(); // Richtungswert
+        }
+    }
+    return input; // Gibt den ASCII-Wert zurück
+}
+
 
 // Funktion zum Bewegen des Cursors basierend auf Tastatureingaben
 int GameManager::moveCursor(BoardManager& boardManager, int currentCell) {
-    while (true) {
-        std::cout << "Drücke eine Pfeiltaste: ";
-        char input = getch(); // Liest eine einzelne Taste ein
-        char arrowKey = '\0';
 
-        // Pfeiltasten erkennen (Escape-Sequenz: 27, 91, [65-68])
-        if (input == 27) { // Escape
-            input = getch();
-            if (input == 91) { // '['
-                arrowKey = getch(); // Richtungswert
-            }
-        }
+    while (true) {
+        int key = getKey(); // Liest eine einzelne Taste ein
 
         // Debug: Welche Taste wurde gedrückt?
-        if (arrowKey == 65) {
+        if (key == 65) {
             std::cout << "Taste gedrückt: Oben\n";
-        } else if (arrowKey == 66) {
+        } else if (key == 66) {
             std::cout << "Taste gedrückt: Unten\n";
-        } else if (arrowKey == 67) {
+        } else if (key == 67) {
             std::cout << "Taste gedrückt: Rechts\n";
-        } else if (arrowKey == 68) {
+        } else if (key == 68) {
             std::cout << "Taste gedrückt: Links\n";
-        } else {
-            std::cout << "Ungültige Eingabe. Nur Pfeiltasten erlaubt.\n";
-            continue;
+        } else if (key == 32) {
+            std::cout << "Taste gedrückt: Leertaste\n";
+        } else if (key == 10) {
+            std::cout << "Taste gedrückt: Enter\n";
         }
 
         int nextCell = currentCell;
-        switch (arrowKey) {
+        switch (key) {
             case 65: // Oben
                 for (int neighbor : boardManager.verticalNeighbors[currentCell]) {
                     if (neighbor < currentCell) {
@@ -191,6 +194,33 @@ int GameManager::moveCursor(BoardManager& boardManager, int currentCell) {
                     }
                 }
                 break;
+            case 32: // Leertaste
+                if (this->isMovingStone) {
+                    std::cout << "isMovingStone: " << this->isMovingStone << "\n";
+                    std::cout << "currentPlayer: " << boardManager.getCurrentPlayer() << "\n";
+                    if (boardManager.getCellState(currentCell) != boardManager.getCurrentPlayer()) {
+                        std::cout << "getCellState(currentCell) != boardManager.getCurrentPlayer :" << boardManager.getCellState(currentCell) << " != " << boardManager.getCurrentPlayer() << "\n";
+                        boardManager.moveStone(movingStoneFrom, currentCell);
+                        this->isMovingStone = false;
+                        this->movingStoneFrom = -1;
+                    } else {
+                        std::cout << "not own cell\n";;
+                    }
+                } else {
+                    std::cout << "setStone" << std::endl;
+                    std::cout << "currentPlayer: " << boardManager.getCurrentPlayer() << "\n";
+
+                    boardManager.setStone(currentCell, boardManager.getCurrentPlayer() == 1 ? BoardManager::CellState::PLAYER1 : BoardManager::CellState::PLAYER2);
+                }
+                break;
+            case 10: // Enter
+                if (boardManager.getCellState(currentCell) != BoardManager::CellState::EMPTY) {
+                    std::cout << "in 10 if\n";
+                    this->isMovingStone = true;
+                    this->movingStoneFrom = currentCell;
+                    break;
+                }
+            std::cout << "out of 10 if\n";
         }
 
         // Überprüfen, ob die Bewegung gültig ist
@@ -198,10 +228,12 @@ int GameManager::moveCursor(BoardManager& boardManager, int currentCell) {
             std::cout << "Bewegung gültig: Zelle " << currentCell << " -> Zelle " << nextCell << "\n";
             return nextCell;
         } else {
-            std::cout << "Ungültige Bewegung. Bitte eine gültige Richtung wählen.\n";
+            return nextCell;
         }
     }
 }
+
+
 
 
 
@@ -212,6 +244,7 @@ void GameManager::printBoard(const BoardManager& boardManager, int currentPlayer
     const std::string player2 = "{ O }";
     const std::string empty = "{   }";
     const std::string highlighted = "\033[31m"; // ANSI escape code für rote Schrift
+    const std::string beingMoved = "\033[44m"; // ANSI escape code für blaue Schrift
     const std::string reset = "\033[0m";       // ANSI escape code für Reset
 
     auto getCellRepresentation = [&](int index, BoardManager::CellState state) -> std::string {
@@ -225,6 +258,10 @@ void GameManager::printBoard(const BoardManager& boardManager, int currentPlayer
         if (index == currentCell) {
             return highlighted + cellContent + reset;
         }
+        if (index == this->movingStoneFrom) {
+            return beingMoved + cellContent + reset;
+        }
+
         return cellContent;
     };
 
@@ -259,6 +296,7 @@ void GameManager::printBoard(const BoardManager& boardManager, int currentPlayer
     std::cout << "				  " << getCellRepresentation(21, cells[21]) << "--------------------" << getCellRepresentation(22, cells[22]) << "--------------------" << getCellRepresentation(23, cells[23]) << "\n";
     std::cout << "\n\n\n";
     std::cout << "\t\t\t\t\t\t **Am Zug: Spieler " << (currentPlayer == 1 ? player1 : player2) << "**\n";
+    std::cout << "\t\t\t\t\t\t **currentPlayer: " << currentPlayer << "**\n";
 
     logger.log(LogLevel::INFO, "GameManager: Player " + std::to_string(currentPlayer) + " is now playing.");
 }

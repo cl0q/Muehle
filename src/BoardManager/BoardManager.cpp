@@ -22,6 +22,8 @@ bool BoardManager::setStone(int position, CellState state) {
         return false;
     }
     cells[position] = state;
+
+    switchPlayer();
     return true;
 }
 
@@ -61,12 +63,19 @@ bool BoardManager::moveStone(int from, int to) {
         return false;
     }
 
+    if (getCellState(cells[from]) != getCurrentPlayer()) {
+        logger.log(LogLevel::WARNING, "moveStone: Player " + std::to_string(getCurrentPlayer()) +
+                                      " is not allowed to move stone from position " + std::to_string(from) + ".");
+        return false;
+    }
+
     cells[to] = cells[from];
     cells[from] = EMPTY;
 
     logger.log(LogLevel::INFO, "moveStone: Player " + std::to_string(cells[to]) +
                                " moved stone from " + std::to_string(from) +
                                " to " + std::to_string(to) + ".");
+    switchPlayer();
     return true;
 }
 
@@ -83,11 +92,20 @@ bool BoardManager::removeStone(int at) {
 
     cells[at] = EMPTY;
     logger.log(LogLevel::INFO, "removeStone: Stone removed from position " + std::to_string(at) + ".");
+    switchPlayer();
     return true;
 }
 
-int BoardManager::getCurrentPlayer() const {
-        return currentPlayer;
+BoardManager::CellState BoardManager::getCurrentPlayer() const {
+        if (currentPlayer == 0) {
+            return PLAYER1;
+        }
+        else if (currentPlayer == 1) {
+            return PLAYER2;
+        }
+        else {
+            return INVALID;
+        }
     }
 
 int BoardManager::switchPlayer() {

@@ -22,6 +22,10 @@ int main() {
     GameManager::clearScreen();
     logger.log(LogLevel::DEBUG, "Game initialized.");
 
+    boardManager.setStone(0, BoardManager::PLAYER1);
+    boardManager.setStone(1, BoardManager::PLAYER2);
+    boardManager.setStone(23, BoardManager::PLAYER1);
+
     gameManager.start();
 
     return 0;

@@ -15,7 +15,7 @@ extern Logger logger;
 class BoardManager {
 public:
 
-    enum CellState {EMPTY, PLAYER1, PLAYER2, INVALID};
+    enum CellState {PLAYER1, PLAYER2, EMPTY, INVALID};
 
     std::vector<CellState> cells;
     std::unordered_map<int, std::vector<int>> verticalNeighbors;
@@ -36,7 +36,7 @@ public:
 
     bool removeStone(int at);
 
-    int getCurrentPlayer() const;
+    BoardManager::CellState getCurrentPlayer() const;
 
     int switchPlayer();
 
