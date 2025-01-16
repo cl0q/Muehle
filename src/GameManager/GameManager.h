@@ -46,7 +46,8 @@ public:
     // Board and Phase Management
     void printBoard(const BoardManager& boardManager, BoardManager::CellState currentPlayer, int currentCell);
     void printStatus(BoardManager& boardManager, int currentCell);
-    void printPhase();
+
+    std::string printPhase();
 
     // Utility Functions
     static void pause();

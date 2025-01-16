@@ -174,23 +174,6 @@ int GameManager::setPhase(BoardManager& boardManager, int currentCell) {
 
     while (true) {
         int key = getKey();
-/*
-        if (key == 65) {
-            std::cout << "Taste gedrückt: Oben\n";
-        } else if (key == 66) {
-            std::cout << "Taste gedrückt: Unten\n";
-        } else if (key == 67) {
-            std::cout << "Taste gedrückt: Rechts\n";
-        } else if (key == 68) {
-            std::cout << "Taste gedrückt: Links\n";
-        } else if (key == 32) {
-            std::cout << "Taste gedrückt: Leertaste\n";
-        } else if (key == 127) { // MacOS-spezifisch
-            std::cout << "Taste gedrückt: Backspace\n";
-        } else if (key == 10) {
-            std::cout << "Taste gedrückt: Enter\n";
-        }
-*/
 
         int nextCell = currentCell;
         switch (key) {
@@ -297,23 +280,6 @@ int GameManager::movePhase(BoardManager& boardManager, int currentCell) {
 
     while (true) {
         int key = getKey();
-/*
-        if (key == 65) {
-            std::cout << "Taste gedrückt: Oben\n";
-        } else if (key == 66) {
-            std::cout << "Taste gedrückt: Unten\n";
-        } else if (key == 67) {
-            std::cout << "Taste gedrückt: Rechts\n";
-        } else if (key == 68) {
-            std::cout << "Taste gedrückt: Links\n";
-        } else if (key == 32) {
-            std::cout << "Taste gedrückt: Leertaste\n";
-        } else if (key == 127) { // MacOS-spezifisch
-            std::cout << "Taste gedrückt: Backspace\n";
-        } else if (key == 10) {
-            std::cout << "Taste gedrückt: Enter\n";
-        }
-*/
         int nextCell = currentCell;
         switch (key) {
             case 65: // Oben
@@ -597,35 +563,49 @@ void GameManager::printBoard(const BoardManager& boardManager, BoardManager::Cel
     const std::string player1 = "{ " + iconPlayer1 + " }";
     const std::string player2 = "{ " + iconPlayer2 + " }";
     const std::string empty = "{   }";
-    const std::string highlighted = "\033[31m"; // ANSI escape code für rote Schrift
-    const std::string beingMoved = "\033[44m"; // ANSI escape code für blaue Schrift
-    const std::string currentIsSelected = "\033[31m\033[44m"; // Red text on blue background
+    const std::string highlighted = "\033[33m"; // ANSI escape code für rote Schrift
+    const std::string beingMoved = "\033[36m"; // ANSI escape code für blaue Schrift
+    const std::string currentIsSelected = "\033[33m\033[36m"; // Red text on blue background
+    const std::string isDeleting = "\033[41m";
+    const std::string cantDeleteOwn = "\033[47m";
     const std::string reset = "\033[0m";       // ANSI escape code für Reset
 
     auto getCellRepresentation = [&](int index, BoardManager::CellState state) -> std::string {
         std::string cellContent;
+
+        // Setze die Zellenanzeige basierend auf dem Zustand
         switch (state) {
-            case BoardManager::CellState::PLAYER1: cellContent = player1; break;
-            case BoardManager::CellState::PLAYER2: cellContent = player2; break;
-            case BoardManager::CellState::EMPTY: cellContent = empty; break;
-            default: cellContent = empty; break;
-        }
-        if (index == this->movingStoneFrom && index == currentCell && this->pressedEnter) {
-            return currentIsSelected + cellContent + reset;
-        } else if (index == currentCell) {
-            return highlighted + cellContent + reset;
-        } else if (index == this->movingStoneFrom) {
-            return beingMoved + cellContent + reset;
+            case BoardManager::CellState::PLAYER1:
+                cellContent = player1;
+            break;
+            case BoardManager::CellState::PLAYER2:
+                cellContent = player2;
+            break;
+            case BoardManager::CellState::EMPTY:
+                cellContent = empty;
+            break;
+            default:
+                cellContent = empty;
+            break;
         }
 
+        if (index == this->movingStoneFrom && index == currentCell && this->pressedEnter) {
+            return currentIsSelected + cellContent + reset;
+        } else if (boardManager.millHasBeenFormed && boardManager.getCellState(index) == boardManager.getCurrentPlayer() && index == currentCell) {
+            return cantDeleteOwn + cellContent + reset;
+        } else if (boardManager.millHasBeenFormed && index == currentCell) {
+            return isDeleting + cellContent + reset;
+        } else if (index == this->movingStoneFrom) {
+            return beingMoved + cellContent + reset;
+        } else if (index == currentCell) {
+            return highlighted + cellContent + reset;
+        }
         return cellContent;
     };
 
-    const auto& cells = boardManager.getCells();
 
-    for (int i = 0; i < cells.size(); ++i) {
-        logger.log(LogLevel::DEBUG, "Cell " + std::to_string(i) + ": " + std::to_string(this->board_manager.cells[i]));
-    }
+
+    const auto& cells = boardManager.getCells();
 
     std::cout << "\033[2J\033[H"; // Bildschirm löschen und Cursor zurücksetzen
 
@@ -672,7 +652,7 @@ void GameManager::printBoard(const BoardManager& boardManager, BoardManager::Cel
 
 
 
-    std::cout << "\t\t\t\t\t\t **Am Zug: Spieler " << (currentPlayer == 1 ? player2 : player1) << "**\n";
+    std::cout << "\t\tSpielphase: " + this->printPhase() + "\t\t **Am Zug: Spieler " << (currentPlayer == 1 ? player2 : player1) << "**\n";
     logger.log(LogLevel::INFO, "GameManager: Player " + this->board_manager.enumToString(currentPlayer) + " " + " is now playing.");
 }
 
@@ -795,16 +775,14 @@ void GameManager::loadGame(const std::string& filename) {
 }
 
 
-void GameManager::printPhase() {
+std::string GameManager::printPhase() {
     switch (this->currentPhase){
         case 0:
-            std::cout << "Setzphase" << std::endl;
-            break;
+            return "Setzphase";
         case 1:
-            std::cout << "Zugphase" << std::endl;
-            break;
+            return "Zugphase";
         case 2:
-            std::cout << "Sprungphase" << std::endl;
-            break;
+            return "Sprungphase";
     }
+    return "Unbekannte Phase";
 }
