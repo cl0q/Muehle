@@ -8,7 +8,7 @@
 #include "GameManager/GameManager.h"
 
 // Globale Logger-Instanz
-Logger logger(LogLevel::INFO, "game.log");
+Logger logger(LogLevel::WARNING, "game.log");
 
 int main() {
     // Instanziiere Manager
