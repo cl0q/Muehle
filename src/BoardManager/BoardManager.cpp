@@ -4,9 +4,6 @@
 
 #include "BoardManager.h"
 #include "../Logger/Logger.h"
-#include <algorithm>
-
-#include "GameManager/GameManager.h"
 
 extern Logger logger;
 
@@ -14,108 +11,94 @@ BoardManager::BoardManager() : cells(24, EMPTY) {
     initializeNeighbors();
 }
 
+
 bool BoardManager::setStone(int position, CellState state) {
     if (position < 0 || position >= cells.size()) {
-        std::cerr << "setStone: Position out of bounds" << std::endl;
+        logger.log(LogLevel::ERROR, "setStone: Position out of bounds");
         return false;
     }
     if (cells[position] != EMPTY) {
-        std::cerr << "setStone: Position already occupied" << std::endl;
+        logger.log(LogLevel::WARNING, "setStone: Position already occupied");
         return false;
     }
+
     cells[position] = state;
-    if (this->getCurrentPlayer() == PLAYER1) {
+
+    if (state == PLAYER1) {
         if (HasStonesLeft_PLAYER1 == 0) {
             logger.log(LogLevel::ERROR, "setStone: No stones left for PLAYER1.");
             return false;
         }
-        this->HasStonesLeft_PLAYER1--;
-    } else if (this->getCurrentPlayer() == PLAYER2) {
+        HasStonesLeft_PLAYER1--;
+    } else if (state == PLAYER2) {
         if (HasStonesLeft_PLAYER2 == 0) {
             logger.log(LogLevel::ERROR, "setStone: No stones left for PLAYER2.");
             return false;
         }
-        this->HasStonesLeft_PLAYER2--;
+        HasStonesLeft_PLAYER2--;
     }
 
-    logger.log(LogLevel::INFO, "setStone: CurrentPlayer " + enumToString(getCurrentPlayer()) + " set stone at position " + std::to_string(position) + " for player " + enumToString(state) + ".");
+    logger.log(LogLevel::INFO, "setStone: Player " + enumToString(state) + " placed a stone at position " + std::to_string(position));
 
-    std::cout << "checkMill: " << checkMill(position, state) << std::endl;
     if (!checkMill(position, state)) {
         switchPlayer();
     } else {
-        this->millHasBeenFormed = true;
-        this->isDeletingStone = true;
-        std::cout << "Mill formed, can delete" << std::endl;
+        millHasBeenFormed = true;
+        isDeletingStone = true;
+        logger.log(LogLevel::INFO, "setStone: Mill formed at position " + std::to_string(position));
     }
 
-        return true;
+    return true;
 }
 
 bool BoardManager::isValidMove(int from, int to) {
-    if (std::find(verticalNeighbors[from].begin(), verticalNeighbors[from].end(), to) != verticalNeighbors[from].end()
-    || std::find(horizontalNeighbors[from].begin(), horizontalNeighbors[from].end(), to) != horizontalNeighbors[from].end()) {
-        logger.log(LogLevel::DEBUG, "isValidMove: Move from " + std::to_string(from) +
-                                    " to " + std::to_string(to) + " is valid.");
+    if (std::find(verticalNeighbors[from].begin(), verticalNeighbors[from].end(), to) != verticalNeighbors[from].end() ||
+        std::find(horizontalNeighbors[from].begin(), horizontalNeighbors[from].end(), to) != horizontalNeighbors[from].end()) {
         return true;
-    } else if (getCurrentPlayer() == PLAYER1 && isAllowedToMoveAnywhere_Player1
-        || getCurrentPlayer() == PLAYER2 && isAllowedToMoveAnywhere_Player2) {
-        return true;
-    } else {
-        logger.log(LogLevel::DEBUG, "isValidMove: Move from " + std::to_string(from) +
-                                    " to " + std::to_string(to) + " is invalid.");
-        return false;
     }
+    if ((getCurrentPlayer() == PLAYER1 && isAllowedToMoveAnywhere_Player1) ||
+        (getCurrentPlayer() == PLAYER2 && isAllowedToMoveAnywhere_Player2)) {
+        return true;
+    }
+
+    logger.log(LogLevel::DEBUG, "isValidMove: Move from " + std::to_string(from) + " to " + std::to_string(to) + " is invalid.");
+    return false;
 }
 
 bool BoardManager::moveStone(int from, int to) {
     if (from < 0 || from >= cells.size() || to < 0 || to >= cells.size()) {
-        logger.log(LogLevel::ERROR, "moveStone: Invalid indices. From: " + std::to_string(from) +
-                                    ", To: " + std::to_string(to) + ".");
+        logger.log(LogLevel::ERROR, "moveStone: Invalid indices. From: " + std::to_string(from) + ", To: " + std::to_string(to));
         return false;
     }
 
-    if (cells[from] == BoardManager::EMPTY) {
-        logger.log(LogLevel::WARNING, "moveStone: No stone at position " + std::to_string(from) + ".");
+    if (cells[from] == EMPTY) {
+        logger.log(LogLevel::WARNING, "moveStone: No stone at position " + std::to_string(from));
         return false;
     }
 
-    if (cells[to] != BoardManager::EMPTY) {
+    if (cells[to] != EMPTY) {
         logger.log(LogLevel::WARNING, "moveStone: Position " + std::to_string(to) + " is already occupied.");
         return false;
     }
 
     if (!isValidMove(from, to)) {
-        logger.log(LogLevel::WARNING, "moveStone: Move from " + std::to_string(from) +
-                                      " to " + std::to_string(to) + " is not valid.");
-        return false;
-    }
-
-    if (getCellState(from) != getCurrentPlayer() ) {
-        logger.log(LogLevel::WARNING, "moveStone:  Player: " + enumToString(getCurrentPlayer()) +
-                                      " is not allowed to move stone from position " + std::to_string(from) +
-                                      ".\n cellFrom: " + std::to_string(from) + " " + enumToString(getCellState(from)) +
-                                      "\n cellTo: "  + std::to_string(to) + " " +enumToString(getCellState(to)) +
-                                      ""
-                                      );
+        logger.log(LogLevel::WARNING, "moveStone: Move from " + std::to_string(from) + " to " + std::to_string(to) + " is not valid.");
         return false;
     }
 
     cells[to] = cells[from];
     cells[from] = EMPTY;
 
-    logger.log(LogLevel::INFO, "moveStone: Player " + std::to_string(cells[to]) +
-                               " moved stone from " + std::to_string(from) +
-                               " to " + std::to_string(to) + ".\n cellFrom: " + enumToString(getCellState(from)) + "\n cellTo: " + enumToString(getCellState(to)));
+    logger.log(LogLevel::INFO, "moveStone: Player " + enumToString(getCellState(to)) + " moved stone from " + std::to_string(from) + " to " + std::to_string(to));
 
-    std::cout << "checkMill: " << checkMill(to, getCurrentPlayer()) << std::endl;
-    if (!checkMill(to, getCurrentPlayer())) {
+    if (!checkMill(to, getCellState(to))) {
         switchPlayer();
     } else {
-        this->millHasBeenFormed = true;
-        this->isDeletingStone = true;
-        std::cout << "Mill formed, can delete" << std::endl;
+        millHasBeenFormed = true;
+        isDeletingStone = true;
+        logger.log(LogLevel::INFO, "moveStone: Mill formed at position " + std::to_string(to));
     }
+
     return true;
 }
 
@@ -125,74 +108,49 @@ bool BoardManager::removeStone(int at) {
         return false;
     }
 
-    if (cells[at] == BoardManager::EMPTY) {
+    if (cells[at] == EMPTY) {
         logger.log(LogLevel::WARNING, "removeStone: No stone at position " + std::to_string(at) + " to remove.");
         return false;
     }
 
     cells[at] = EMPTY;
-    std::cout << "[REMOVE STONE] at: " << at << std::endl;
-    logger.log(LogLevel::INFO, "removeStone: Stone removed from position " + std::to_string(at) + ".");
+    logger.log(LogLevel::INFO, "removeStone: Stone removed from position " + std::to_string(at));
 
     if (millHasBeenFormed) {
         millHasBeenFormed = false;
     }
     switchPlayer();
+
     return true;
 }
 
 BoardManager::CellState BoardManager::getCurrentPlayer() const {
-        if (currentPlayer == 0) {
-            return PLAYER1;
-        }
-        else if (currentPlayer == 1) {
-            return PLAYER2;
-        }
-        else {
-            return EMPTY;
-        }
-    }
+    return currentPlayer == 0 ? PLAYER1 : PLAYER2;
+}
 
 BoardManager::CellState BoardManager::getOppositePlayer() const {
-    if (currentPlayer == 0) {
-        return PLAYER2;
-    }
-    else if (currentPlayer == 1) {
-        return PLAYER1;
-    }
-    else {
-        return EMPTY;
-    }
+    return currentPlayer == 0 ? PLAYER2 : PLAYER1;
 }
 
 void BoardManager::switchPlayer() {
-    if (currentPlayer == CellState::PLAYER1) {
-        currentPlayer = CellState::PLAYER2;
-    } else if (currentPlayer == CellState::PLAYER2) {
-        currentPlayer = CellState::PLAYER1;
-    } else {
-        logger.log(LogLevel::ERROR, "switchPlayer: Invalid player " + std::to_string(currentPlayer) + ".");
-    }
+    currentPlayer = (currentPlayer == PLAYER1) ? PLAYER2 : PLAYER1;
 }
 
 std::vector<std::pair<int, BoardManager::CellState>> BoardManager::getNeighborsWithState(int position) const {
     std::vector<std::pair<int, CellState>> neighborsWithState;
 
-    // Hole alle vertikalen Nachbarn
     if (verticalNeighbors.find(position) != verticalNeighbors.end()) {
         for (int neighbor : verticalNeighbors.at(position)) {
             neighborsWithState.emplace_back(neighbor, cells[neighbor]);
         }
     }
 
-    // Hole alle horizontalen Nachbarn
     if (horizontalNeighbors.find(position) != horizontalNeighbors.end()) {
         for (int neighbor : horizontalNeighbors.at(position)) {
-            // Prüfe, ob Nachbar schon hinzugefügt wurde (um Duplikate zu vermeiden)
             if (std::find_if(neighborsWithState.begin(), neighborsWithState.end(),
                              [neighbor](const std::pair<int, CellState>& p) { return p.first == neighbor; }) == neighborsWithState.end()) {
                 neighborsWithState.emplace_back(neighbor, cells[neighbor]);
-                             }
+            }
         }
     }
 
@@ -216,60 +174,22 @@ std::string BoardManager::enumToString(BoardManager::CellState state) {
     }
 }
 
-void BoardManager::setCurrentPlayer(int currentPlayer) {
-    currentPlayer = currentPlayer;
-}
-
 void BoardManager::initializeNeighbors() {
-    verticalNeighbors[0] = {9};
-    verticalNeighbors[1] = {4};
-    verticalNeighbors[2] = {14};
-    verticalNeighbors[3] = {10};
-    verticalNeighbors[4] = {1, 7};
-    verticalNeighbors[5] = {13};
-    verticalNeighbors[6] = {11};
-    verticalNeighbors[7] = {4};
-    verticalNeighbors[8] = {12};
-    verticalNeighbors[9] = {0, 21};
-    verticalNeighbors[10] = {3, 18};
-    verticalNeighbors[11] = {6, 15};
-    verticalNeighbors[12] = {8, 17};
-    verticalNeighbors[13] = {5, 20};
-    verticalNeighbors[14] = {2, 23};
-    verticalNeighbors[15] = {11};
-    verticalNeighbors[16] = {19};
-    verticalNeighbors[17] = {12};
-    verticalNeighbors[18] = {10};
-    verticalNeighbors[19] = {16, 22};
-    verticalNeighbors[20] = {13};
-    verticalNeighbors[21] = {9};
-    verticalNeighbors[22] = {19};
-    verticalNeighbors[23] = {14};
+    verticalNeighbors = {
+        {0, {9}}, {1, {4}}, {2, {14}}, {3, {10}}, {4, {1, 7}}, {5, {13}},
+        {6, {11}}, {7, {4}}, {8, {12}}, {9, {0, 21}}, {10, {3, 18}},
+        {11, {6, 15}}, {12, {8, 17}}, {13, {5, 20}}, {14, {2, 23}},
+        {15, {11}}, {16, {19}}, {17, {12}}, {18, {10}}, {19, {16, 22}},
+        {20, {13}}, {21, {9}}, {22, {19}}, {23, {14}}
+    };
 
-    horizontalNeighbors[0] = {1};
-    horizontalNeighbors[1] = {0, 2};
-    horizontalNeighbors[2] = {1};
-    horizontalNeighbors[3] = {4};
-    horizontalNeighbors[4] = {3, 5};
-    horizontalNeighbors[5] = {4};
-    horizontalNeighbors[6] = {7};
-    horizontalNeighbors[7] = {6, 8};
-    horizontalNeighbors[8] = {7};
-    horizontalNeighbors[9] = {10};
-    horizontalNeighbors[10] = {9, 11};
-    horizontalNeighbors[11] = {10};
-    horizontalNeighbors[12] = {13};
-    horizontalNeighbors[13] = {12, 14};
-    horizontalNeighbors[14] = {13};
-    horizontalNeighbors[15] = {16};
-    horizontalNeighbors[16] = {15, 17};
-    horizontalNeighbors[17] = {16};
-    horizontalNeighbors[18] = {19};
-    horizontalNeighbors[19] = {18, 20};
-    horizontalNeighbors[20] = {19};
-    horizontalNeighbors[21] = {22};
-    horizontalNeighbors[22] = {21, 23};
-    horizontalNeighbors[23] = {22};
+    horizontalNeighbors = {
+        {0, {1}}, {1, {0, 2}}, {2, {1}}, {3, {4}}, {4, {3, 5}}, {5, {4}},
+        {6, {7}}, {7, {6, 8}}, {8, {7}}, {9, {10}}, {10, {9, 11}}, {11, {10}},
+        {12, {13}}, {13, {12, 14}}, {14, {13}}, {15, {16}}, {16, {15, 17}},
+        {17, {16}}, {18, {19}}, {19, {18, 20}}, {20, {19}}, {21, {22}},
+        {22, {21, 23}}, {23, {22}}
+    };
 }
 
 bool BoardManager::checkMill(int& currentCell, BoardManager::CellState currentPlayer) {

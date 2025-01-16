@@ -1,137 +1,135 @@
-# Roadmap für das Mühle-Brettspiel-Projekt (C++)
+# Mühle C++
 
-## Inhaltsverzeichnis
-1. [Einleitung](#einleitung)
-2. [Architektur und Komponenten](#architektur-und-komponenten)
-3. [Roadmap](#roadmap)
-4. [Komponenten-Details mit Funktionen und Methoden](#komponenten-details-mit-funktionen-und-methoden)
+Willkommen zum Mühle-Projekt!
 
----
+## Inhalt
 
-## Einleitung
-
-Dieses Dokument beschreibt die Roadmap zur Umsetzung eines Mühle-Brettspiels in einer TUI-Anwendung (Text User Interface) mit C++. Die Struktur wurde so gestaltet, dass sie modular, effizient und wartbar ist. Wo sinnvoll, kommen C++-Bibliotheken wie Boost zum Einsatz.
-
----
-
-## Architektur und Komponenten
-
-Das Projekt wird in folgende Module unterteilt:
-1. **Core Module (Spiel-Logik)**
-    - Verwaltung des Spielfelds und der Spielregeln.
-2. **TUI Module (Benutzeroberfläche)**
-    - Darstellung des Start- und Pausemenüs sowie des Spielfelds.
-3. **State Management (Status und Datenhaltung)**
-    - Verwaltung des Spielstatus und der Spielstand-Speicherung.
-4. **Services (Hintergrundlogik)**
-    - Benutzerinteraktion und Dateioperationen.
-5. **Utilities**
-    - Logging und Fehlerbehandlung.
+- [Voraussetzungen](#voraussetzungen)
+- [Kompilieren und Ausführen](#kompilieren-und-ausführen)
+- [Projektaufbau](#projektaufbau)
+- [Spielablauf](#spielablauf)
+- [Features](#features)
+- [Beitrag leisten](#beitrag-leisten)
 
 ---
 
-## Roadmap
+## Voraussetzungen
 
-### Phase 1: Grundgerüst und Spiel-Logik
-1. **Spielfeld-Management**
-    - Implementiere eine Datenstruktur zur Darstellung des Spielfelds (z. B. ein Array oder eine Graph-basierte Struktur).
-    - Schreibe Methoden für das Platzieren, Bewegen und Entfernen von Steinen.
+Um das Projekt erfolgreich auf macOS zu kompilieren und auszuführen, benötigst du folgende Tools:
 
-2. **Regeln und Bedingungen**
-    - Implementiere die Regeln des Spiels, einschließlich Sieg- und Mühlenbildung.
+1. **C++ Compiler**:
+   - Installiere die Command Line Tools (falls nicht bereits vorhanden):
+     ```bash
+     xcode-select --install
+     ```
 
----
+2. **CMake**:
+   - Installiere CMake über Homebrew:
+     ```bash
+     brew install cmake
+     ```
 
-### Phase 2: Benutzeroberfläche
-1. **Hauptmenü**
-    - Erstelle ein Startmenü mit Optionen wie "Neues Spiel", "Spiel laden" und "Beenden".
-
-2. **Spielfeldanzeige**
-    - Entwickle eine textbasierte Darstellung des Spielfelds.
-
-3. **Pausemenü**
-    - Füge ein Menü hinzu, das während des Spiels aufgerufen werden kann, mit Optionen wie "Fortsetzen", "Spiel speichern" und "Zum Hauptmenü".
+3. **Terminal**:
+   - Ein Standard-Terminal für macOS reicht aus, zur Entwicklung wurde iTerm2 verwendet.
 
 ---
 
-### Phase 3: State Management
-1. **Spielstand speichern und laden**
-    - Verwende Boost.Serialization zur Serialisierung des Spielfelds und anderer Spielzustände.
+## Kompilieren und Ausführen
 
-2. **Statusverwaltung**
-    - Implementiere eine Zustandsmaschine, um die verschiedenen Spielphasen zu verwalten.
+### Schritte zum Kompilieren:
 
----
+1. **Repository klonen:**
+   ```bash
+   git clone https://github.com/dein-github-benutzername/muehle.git
+   cd muehle
+   ```
 
-### Phase 4: Feinschliff und Testing
-1. **Fehlerbehandlung**
-    - Implementiere robustes Fehlerhandling für Eingaben und Dateioperationen.
+2. **Build-Verzeichnis erstellen:**
+   ```bash
+   mkdir build
+   cd build
+   ```
 
-2. **Tests**
-    - Schreibe Unit-Tests für die Spiellogik und Integrationstests für die Benutzeroberfläche.
+3. **CMake-Projekt generieren:**
+   ```bash
+   cmake ..
+   ```
 
----
+4. **Projekt kompilieren:**
+   ```bash
+   make
+   ```
 
-## Komponenten-Details mit Funktionen und Methoden
-
-### **Core Module**
-#### 1. BoardManager (Spielfeld-Management)
-**Wichtige Methoden:**
-- `void initializeBoard()`: Initialisiert das Spielfeld.
-- `bool setStone(int position, int player)`: Setzt einen Stein auf das Spielfeld.
-- `bool moveStone(int from, int to, int player)`: Bewegt einen Stein.
-- `bool removeStone(int position)`: Entfernt einen Stein.
-
-#### 2. RuleEngine (Spielregeln)
-**Wichtige Methoden:**
-- `bool checkMill(int position)`: Prüft, ob eine Mühle gebildet wurde.
-- `bool checkWin(int player)`: Überprüft, ob ein Spieler gewonnen hat.
+5. **Spiel ausführen:**
+   ```bash
+   ./muehle
+   ```
 
 ---
 
-### **TUI Module**
-#### 1. MenuManager (Menü-Verwaltung)
-**Wichtige Methoden:**
-- `void showMainMenu()`: Zeigt das Hauptmenü an.
-- `void showPauseMenu()`: Zeigt das Pausemenü an.
+## Projektaufbau
 
-#### 2. GameView (Spielfeldanzeige)
-**Wichtige Methoden:**
-- `void renderBoard(const std::vector<int>& board)`: Zeigt das aktuelle Spielfeld an.
-- `void displayPlayerTurn(int player)`: Zeigt den aktiven Spieler an.
+Das Projekt ist modular aufgebaut, um die Lesbarkeit und Wartbarkeit zu verbessern:
 
----
+```plaintext
+.
+├── BoardManager/
+│   ├── BoardManager.cpp       # Verwaltung des Spielfelds und der Züge
+│   ├── BoardManager.h
+├── GameManager/
+│   ├── GameManager.cpp        # Spielsteuerung und Phasenlogik
+│   ├── GameManager.h
+├── Logger/
+│   ├── Logger.cpp             # Logger für Debugging und Fehlerberichte
+│   ├── Logger.h
+└── main.cpp                   # Einstiegspunkt des Programms
+```
 
-### **State Management**
-#### 1. GameStateManager
-**Wichtige Methoden:**
-- `void saveState(const std::string& filename)`: Speichert den aktuellen Spielstand.
-- `void loadState(const std::string& filename)`: Lädt einen gespeicherten Spielstand.
-- `void changeState(GameState newState)`: Ändert den aktuellen Spielstatus.
-
----
-
-### **Services**
-#### 1. InputHandler
-**Wichtige Methoden:**
-- `std::string getUserInput(const std::string& prompt)`: Holt Eingaben vom Benutzer.
-- `int getPositionInput(const std::string& prompt)`: Holt eine gültige Spielfeldposition.
-
-#### 2. FileService
-**Wichtige Methoden:**
-- `bool saveToFile(const std::string& data, const std::string& filepath)`: Speichert Daten in einer Datei.
-- `std::string loadFromFile(const std::string& filepath)`: Lädt Daten aus einer Datei.
+- **BoardManager:** Verwaltung der Spielfeldlogik (Setzen, Bewegen, Entfernen von Steinen).
+- **GameManager:** Steuerung des Spielablaufs und der verschiedenen Phasen (Setzphase, Zugphase, Sprungphase).
+- **Logger:** Ein Logging-System zur Protokollierung von Ereignissen und Fehlern.
 
 ---
 
-### **Utilities**
-#### 1. Logger
-**Wichtige Methoden:**
-- `void logInfo(const std::string& message)`: Loggt allgemeine Informationen.
-- `void logError(const std::string& message)`: Loggt Fehler.
+## Spielablauf
+
+Das Spiel folgt dem klassischen Ablauf von Mühle:
+
+1. **Setzphase:**
+   - Spieler setzen abwechselnd ihre Steine auf das Spielfeld.
+   - Wenn drei Steine in einer Reihe (vertikal oder horizontal) stehen, bildet sich eine "Mühle" und der Spieler darf einen gegnerischen Stein entfernen.
+
+2. **Zugphase:**
+   - Spieler bewegen ihre Steine entlang der Nachbarfelder.
+   - Mühlen können weiterhin gebildet werden, um gegnerische Steine zu entfernen.
+
+3. **Sprungphase:**
+   - Wenn ein Spieler nur noch 3 Steine hat, darf er auf beliebige freie Felder springen.
+
+4. **Siegbedingungen:**
+   - Ein Spieler gewinnt, wenn der Gegner:
+     - Weniger als 3 Steine auf dem Spielfeld hat, oder
+     - Keine legalen Züge mehr machen kann.
 
 ---
 
-## Fazit
+## Features
 
-Diese Roadmap und Komponentenübersicht bietet eine klare Struktur für die Umsetzung deines Mühle-Brettspiels. Die Boost-Bibliotheken (z. B. Boost.Serialization und Boost.Filesystem) helfen bei der effizienten Umsetzung der benötigten Funktionalitäten, während die modulare Architektur sicherstellt, dass das Projekt gut wartbar und erweiterbar bleibt.
+- **Pfeiltasten**: Bewegung über das Spielfeld
+- **Leertaste (`Space`)**: Steine setzen
+- **Enter (`Return`)**: Steine bewegen und anschließend mit `Space` setzen
+- **Rücktaste (`Backspace`)**: Entfernen von gegnerischen Steinen
+
+- **Speichern und Laden:** 
+  - Das Spiel speichert den aktuellen Zustand in einer Datei `save.muehle`. 
+  - Beim Start kann das Spiel fortgesetzt werden.
+
+- **Benutzerdefinierte Symbole:**
+  - Die Symbole der Spieler (z. B. "X" und "O") können im Einstellungsmenü geändert werden, auch Emojis werden unterstützt.
+
+- **Farbliche Hervorhebungen:**
+  - Aktuell ausgewählte Zellen werden farblich hervorgehoben.
+
+- **Debugging-Logs:**
+  - Alle wichtigen Aktionen werden im Logger dokumentiert (`game.log`).
+
