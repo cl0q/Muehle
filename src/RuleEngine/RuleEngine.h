@@ -41,6 +41,10 @@ public:
         return true;
     }
 
+    bool isAbleToMove(Player* p);
+
+    bool canStoneMove(int position, Player* p);
+
 };
 
 

@@ -18,4 +18,7 @@ int Player::getStonesPlayed()
 
 void Player::decreaseTotalStones() {
     totalStones--;
+    if (totalStones == 3) {
+        std::cout << name << " is allowed to jump!" << std::endl;
+    }
 }

@@ -27,7 +27,5 @@ int main() {
     std::cout << "Game starts:" << std::endl;
     gameManager.run();
 
-    
-
     return 0;
 }

@@ -66,3 +66,36 @@ bool RuleEngine::isGameOver() {
     }
     return false;
 }
+
+bool RuleEngine::isAbleToMove(Player* p) {
+    if (p->canJump) {
+        return true;
+    }
+    
+    for (int i = 0; i < bm->cells.size(); i++) {
+        if (bm->cells[i] == p->symbol) {
+            if (canStoneMove(i, p)) {
+                return true;
+            }
+        }
+    }
+    return false;
+
+}
+
+bool RuleEngine::canStoneMove(int position, Player* p) {
+    if (p->canJump) {
+        return true;
+    }
+    for (int neighbor : bm->horizontalNeighbors[position]) {
+        if (bm->cells[neighbor] == '.') {
+            return true;
+        }
+    }
+    for (int neighbor : bm->verticalNeighbors[position]) {
+        if (bm->cells[neighbor] == '.') {
+            return true;
+        }
+    }
+    return false;
+}
