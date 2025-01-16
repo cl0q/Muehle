@@ -118,13 +118,22 @@ void GameManager::gameLoop() {
 
     BoardManager::CellState winner = this->board_manager.getCurrentPlayer();
 
-    std::cout << "[OUT OF JUMP PHASE] winner: " << std::to_string(winner) << std::endl;
+    std::cout << "[OUT OF JUMP PHASE] winner: " << this->board_manager.enumToString(winner) << std::endl;
 
 
     logger.log(LogLevel::INFO, "GameManager: Game loop ended.");
+
+    pause();
+    start();
 }
 
 // ---------- Hilfsmethoden ----------
+
+void GameManager::pause() {
+    std::cout << "\nDrücke eine beliebige Taste, um fortzufahren...";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+}
 
 int GameManager::getUserInput(int min, int max) {
     struct termios oldt, newt;
@@ -884,9 +893,32 @@ void GameManager::printBoard(const BoardManager& boardManager, BoardManager::Cel
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				  " << getCellRepresentation(21, this->board_manager.cells[21]) << "--------------------" << getCellRepresentation(22, this->board_manager.cells[22]) << "--------------------" << getCellRepresentation(23, this->board_manager.cells[23]) << "\n";
-    std::cout << "\n\n\n";
+    std::cout << "\n\n";
+
+    // Spielersteine darstellen
+    int stonesPlayer1 = boardManager.HasStonesLeft_PLAYER1;
+    int stonesPlayer2 = boardManager.HasStonesLeft_PLAYER2;
+
+    // Erzeuge Strings für die verbleibenden Steine
+    std::string player1Stones, player2Stones;
+    for (int i = 0; i < stonesPlayer1; ++i) {
+        player1Stones += iconPlayer1 + " ";
+    }
+    for (int i = 0; i < stonesPlayer2; ++i) {
+        player2Stones += iconPlayer2 + " ";
+    }
+
+    // Symmetrische Ausgabe
+    int totalLength = 50; // Gesamtbreite der Ausgabe
+    int padding = (totalLength - (player1Stones.size() + player2Stones.size() + 4)) / 2;
+
+    std::cout << "\t\t\t\t      " << std::string(padding, ' ') << player1Stones << "|| " << player2Stones << "\n";
+
+    std::cout << "\n\n";
+
+
+
     std::cout << "\t\t\t\t\t\t **Am Zug: Spieler " << (currentPlayer == 1 ? player2 : player1) << "**\n";
-    std::cout << "\t\t\t\t\t\t **currentPlayer: " << this->board_manager.enumToString(currentPlayer) << "**\n";
 
 
     /*    std::cout << "\n\n\n";
@@ -937,7 +969,7 @@ void GameManager::handleSettingsMenu() {
 
         switch (userInput) {
             case 1: {
-                std::cout << "Gib das neue Symbol für Spieler 1 ein (1 Zeichen oder Emoji): ";
+                std::cout << "Gib das neue Symbol für Spieler 1 ein: ";
                 std::string newSymbol;
                 std::cin >> newSymbol;
 
@@ -945,13 +977,13 @@ void GameManager::handleSettingsMenu() {
                 if (newSymbol == this->iconPlayer2) {
                     std::cout << "Das Symbol darf nicht mit Spieler 2 übereinstimmen!\n";
                 } else {
-                    this->iconPlayer1 = newSymbol;
+                    this->iconPlayer1 = newSymbol[0];
                     std::cout << "Symbol für Spieler 1 erfolgreich geändert zu: " << this->iconPlayer1 << "\n";
                 }
                 break;
             }
             case 2: {
-                std::cout << "Gib das neue Symbol für Spieler 2 ein (1 Zeichen oder Emoji): ";
+                std::cout << "Gib das neue Symbol für Spieler 2 ein: ";
                 std::string newSymbol;
                 std::cin >> newSymbol;
 
@@ -959,7 +991,7 @@ void GameManager::handleSettingsMenu() {
                 if (newSymbol == this->iconPlayer1) {
                     std::cout << "Das Symbol darf nicht mit Spieler 1 übereinstimmen!\n";
                 } else {
-                    this->iconPlayer2 = newSymbol;
+                    this->iconPlayer2 = newSymbol[0];
                     std::cout << "Symbol für Spieler 2 erfolgreich geändert zu: " << this->iconPlayer2 << "\n";
                 }
                 break;

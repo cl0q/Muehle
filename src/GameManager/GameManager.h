@@ -45,6 +45,8 @@ public:
 
     void gameLoop();
 
+    void pause();
+
     static int getUserInput(int min, int max) ;
 
     static bool random50Percent();
