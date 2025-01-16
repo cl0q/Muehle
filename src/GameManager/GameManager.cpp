@@ -48,28 +48,36 @@ void GameManager::gameLoop() {
     logger.log(LogLevel::INFO, "GameManager: Entering game loop.");
 
     bool isRunningSetPhase = true;
-    bool isRunningMovePhase = false;
-    bool isRunningJumpPhase = false;
+    bool isRunningMovePhase = true;
+    bool isRunningJumpPhase = true;
 
-    isMovingStone = false;
+    //isMovingStone = false;
     movingStoneFrom = 24;
     bool pressedEnter = false;
 
 
     int currentCell = 0;
+    while (this->board_manager.HasStonesLeft_PLAYER1 != 0 || this->board_manager.HasStonesLeft_PLAYER2 != 0) {
+            printBoard(this->board_manager, this->board_manager.getCurrentPlayer(), currentCell);
+            currentCell = setPhase(this->board_manager, currentCell);
 
-    while (isRunningSetPhase) {
-        printBoard(this->board_manager, this->board_manager.getCurrentPlayer(), currentCell);
-        currentCell = setPhase(this->board_manager, currentCell);
 
-        logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
+            logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
 
-        printPhase();
-        // Platzhalter für zukünftige RuleEngine-Integration
-        // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
+            printPhase();
+            // Platzhalter für zukünftige RuleEngine-Integration
+            // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
+
+        std::cout << "[OUT OF WHILE] isMovingStone: " << std::to_string(isMovingStone) << " isDeletingStone: " << std::to_string(this->board_manager.isDeletingStone) << std::endl;
     }
 
-    while (isRunningMovePhase) {
+    std::cout << "[OUT OF SETPHASE] HasStonesLeft_PLAYER1: " << std::to_string(this->board_manager.HasStonesLeft_PLAYER1) << " HasStonesLeft_PLAYER2: " << std::to_string(this->board_manager.HasStonesLeft_PLAYER1)
+        << " isMovingStone : " << std::to_string(isMovingStone) << " isDeletingStone: " << std::to_string(this->board_manager.isDeletingStone) << " millFormed: " << std::to_string(this->board_manager.millHasBeenFormed) << std::endl;
+
+    currentPhase = 1;
+
+    while (getPlacedStones()[0] > 3 && getPlacedStones()[1] > 3) {
+
         printBoard(this->board_manager, this->board_manager.getCurrentPlayer(), currentCell);
         currentCell = movePhase(this->board_manager, currentCell);
 
@@ -80,7 +88,15 @@ void GameManager::gameLoop() {
         // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
     }
 
-    while (isRunningJumpPhase) {
+    std::cout << "[OUT OF MOVE PHASE] getPlacedStones_Player1: " << std::to_string(getPlacedStones()[0]) << " getPlacedStones_Player2: " << std::to_string(getPlacedStones()[1])
+        << " isMovingStone : " << std::to_string(isMovingStone) << " isDeletingStone: " << std::to_string(this->board_manager.isDeletingStone) << " millFormed: " << std::to_string(this->board_manager.millHasBeenFormed) << std::endl;
+    currentPhase = 2;
+
+    while ((getPlacedStones()[0] > 2 && hasLegalMoves(this->board_manager, BoardManager::CellState::PLAYER1)) &&
+           (getPlacedStones()[1] > 2 && hasLegalMoves(this->board_manager, BoardManager::CellState::PLAYER2))) {
+
+        isPlayerAllowedToMoveAnywhere(this->board_manager.getCurrentPlayer());
+
         printBoard(this->board_manager, this->board_manager.getCurrentPlayer(), currentCell);
         currentCell = jumpPhase(this->board_manager, currentCell);
 
@@ -90,6 +106,11 @@ void GameManager::gameLoop() {
         // Platzhalter für zukünftige RuleEngine-Integration
         // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
     }
+    printBoard(this->board_manager, this->board_manager.getCurrentPlayer(), currentCell);
+
+    BoardManager::CellState winner = this->board_manager.getCurrentPlayer();
+
+    std::cout << "[OUT OF JUMP PHASE] winner: " << std::to_string(winner) << std::endl;
 
 
     logger.log(LogLevel::INFO, "GameManager: Game loop ended.");
@@ -145,7 +166,7 @@ int readKeyAsInt() {
     return static_cast<int>(key);
 }
 
-int getKey() {
+int GameManager::getKey() {
     int input = readKeyAsInt(); // Liest die erste Taste
     if (input == 27) { // Escape-Sequenz beginnt
         input = readKeyAsInt();
@@ -153,6 +174,7 @@ int getKey() {
             return readKeyAsInt(); // Richtungswert
         }
     }
+    this->latestKeyInput = input;
     return input; // Gibt den ASCII-Wert zurück
 }
 
@@ -174,6 +196,8 @@ int GameManager::setPhase(BoardManager& boardManager, int currentCell) {
             std::cout << "Taste gedrückt: Links\n";
         } else if (key == 32) {
             std::cout << "Taste gedrückt: Leertaste\n";
+        } else if (key == 127) { // MacOS-spezifisch
+            std::cout << "Taste gedrückt: Backspace\n";
         } else if (key == 10) {
             std::cout << "Taste gedrückt: Enter\n";
         }
@@ -217,50 +241,76 @@ int GameManager::setPhase(BoardManager& boardManager, int currentCell) {
                 pressedEnter = false;
 
             std::cout << "[SPACE HIT]" << std::endl;
+                if (!boardManager.millHasBeenFormed) {
+                    if (!isMovingStone) {
+                        std::cout << "[SPACE SET] Leertaste gedrückt" << std::endl << "currentCell: " << currentCell << " belongs to : " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+
+                        boardManager.setStone(currentCell, boardManager.getCurrentPlayer());
+                        break;
+                    } else if (isMovingStone && this->movingStoneFrom != -1) {
+                        std::cout << "[SPACE MOVING] movingStone from: " << this->movingStoneFrom << " to: " << currentCell << " , currentPlayer: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+                        if (boardManager.moveStone(this->movingStoneFrom, currentCell)) {
+                            std::cout << "[SPACE MOVING] movedStone from : " << this->movingStoneFrom << " to : " << currentCell << " , currentPlayer" << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
 
 
-                if (!isMovingStone) {
-                    std::cout << "[SPACE SET] Leertaste gedrückt" << std::endl << "currentCell: " << currentCell << " belongs to : " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
-
-                    boardManager.setStone(currentCell, boardManager.getCurrentPlayer());
-                    break;
-                } else if (isMovingStone && this->movingStoneFrom != -1) {
-                    std::cout << "[SPACE MOVING] movingStone from: " << this->movingStoneFrom << " to: " << currentCell << " , currentPlayer: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
-                    if (boardManager.moveStone(this->movingStoneFrom, currentCell)) {
-                    std::cout << "[SPACE MOVING] movedStone from : " << this->movingStoneFrom << " to : " << currentCell << " , currentPlayer" << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
-
-
-                    isMovingStone = false;
-                    this->movingStoneFrom = -1;
+                            isMovingStone = false;
+                            this->movingStoneFrom = -1;
+                            break;
+                        }
                         break;
                     }
-                    break;
+                } else if (boardManager.millHasBeenFormed) {
+                    std::cout << "[SPACE NO SET] millHasBeenFormed: " << boardManager.millHasBeenFormed << std::endl;
                 }
+                break;
             case 10: // Enter
-                if (boardManager.getCellState(currentCell) == boardManager.getCurrentPlayer()) {
-                    std::cout << "[ENTER CELLSTATE BELONGS CORRECT TO] " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
-                    if (!pressedEnter) {
-                        pressedEnter = true;
-                        std::cout << "[ENTER MOV] movingStone from: " << currentCell << " belongs to: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+                if (!boardManager.millHasBeenFormed) {
+                    if (boardManager.getCellState(currentCell) == boardManager.getCurrentPlayer()) {
+                        std::cout << "[ENTER CELLSTATE BELONGS CORRECT TO] " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+                        if (!pressedEnter) {
+                            pressedEnter = true;
+                            std::cout << "[ENTER MOV] movingStone from: " << currentCell << " belongs to: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
 
 
-                        this->isMovingStone = true;
-                        std::cout << "set isMovingStone: " << isMovingStone << std::endl;
-                        this->movingStoneFrom = currentCell;
+                            this->isMovingStone = true;
+                            std::cout << "set isMovingStone: " << isMovingStone << std::endl;
+                            this->movingStoneFrom = currentCell;
 
+                            break;
+                        }
+                        if (pressedEnter && currentCell == this->movingStoneFrom) {
+
+                            pressedEnter = false;
+                            this->isMovingStone = false;
+                            std::cout << "set isMovingStone: " << isMovingStone << std::endl;
+                            this->movingStoneFrom = -1;
+
+                            break;
+                        }
+                    } else {
+                        std::cout << "[ENTER NOT MINE] cellstate at: " << currentCell << " is: " << boardManager.enumToString(boardManager.getCellState(currentCell)) << std::endl;
                         break;
                     }
-                    if (pressedEnter && currentCell == this->movingStoneFrom) {
-
-                        pressedEnter = false;
-                        this->isMovingStone = false;
-                        std::cout << "set isMovingStone: " << isMovingStone << std::endl;
-                        this->movingStoneFrom = -1;
-
-                        break;
-                    }
+                } else if (boardManager.millHasBeenFormed) {
+                    std::cout << "[ENTER NOT MOVE] millHasBeenFormed: " << boardManager.millHasBeenFormed << std::endl;
+                    break;
                 }
-                std::cout << "[ENTER NOT MINE] cellstate at: " << currentCell << " is: " << boardManager.enumToString(boardManager.getCellState(currentCell)) << std::endl;
+            break;
+
+            case 127: // Backspace
+                if (boardManager.millHasBeenFormed) {
+                    std::cout << "[BACKSPACE] millHasBeenFormed: " << boardManager.millHasBeenFormed << std::endl;
+                    if (boardManager.getCellState(currentCell) != boardManager.getCurrentPlayer() && boardManager.getCellState(currentCell) != boardManager.EMPTY
+                        && !(boardManager.checkMill(currentCell, boardManager.getOppositePlayer())) ) {
+                        std::cout << "removeStone: " << currentCell << " belongs to: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+                        boardManager.removeStone(currentCell);
+                        this->dekrementStoneAfterDelete();
+                        break;
+                    }
+                    break;
+                }
+            std::cout << "[NO DELETE] millHasBeenFormed: " << boardManager.millHasBeenFormed << std::endl;
+            break;
 
 
         }
@@ -293,6 +343,8 @@ int GameManager::movePhase(BoardManager& boardManager, int currentCell) {
             std::cout << "Taste gedrückt: Links\n";
         } else if (key == 32) {
             std::cout << "Taste gedrückt: Leertaste\n";
+        } else if (key == 127) { // MacOS-spezifisch
+            std::cout << "Taste gedrückt: Backspace\n";
         } else if (key == 10) {
             std::cout << "Taste gedrückt: Enter\n";
         }
@@ -341,7 +393,7 @@ int GameManager::movePhase(BoardManager& boardManager, int currentCell) {
                 if (!isMovingStone) {
                     std::cout << "[SPACE SET] Leertaste gedrückt" << std::endl << "currentCell: " << currentCell << " belongs to : " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
 
-                    boardManager.setStone(currentCell, boardManager.getCurrentPlayer());
+                    std::cout << "[ZUG PHASE] kein setStone erlaubt!" << std::endl;
                     break;
                 } else if (isMovingStone && this->movingStoneFrom != -1) {
                     std::cout << "[SPACE MOVING] movingStone from: " << this->movingStoneFrom << " to: " << currentCell << " , currentPlayer: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
@@ -380,7 +432,22 @@ int GameManager::movePhase(BoardManager& boardManager, int currentCell) {
                     }
                 }
                 std::cout << "[ENTER NOT MINE] cellstate at: " << currentCell << " is: " << boardManager.enumToString(boardManager.getCellState(currentCell)) << std::endl;
+            break;
 
+            case 127: // Backspace
+                if (boardManager.millHasBeenFormed) {
+                    std::cout << "[BACKSPACE] millHasBeenFormed: " << boardManager.millHasBeenFormed << std::endl;
+                    if (boardManager.getCellState(currentCell) != boardManager.getCurrentPlayer() && boardManager.getCellState(currentCell) != boardManager.EMPTY
+                        && !(boardManager.checkMill(currentCell, boardManager.getOppositePlayer())) ) {
+                        std::cout << "removeStone: " << currentCell << " belongs to: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+                        boardManager.removeStone(currentCell);
+                        this->dekrementStoneAfterDelete();
+                        break;
+                        }
+                    break;
+                }
+            std::cout << "[NO DELETE] millHasBeenFormed: " << boardManager.millHasBeenFormed << std::endl;
+            break;
 
         }
 
@@ -396,6 +463,143 @@ int GameManager::movePhase(BoardManager& boardManager, int currentCell) {
     }
 }
 
+int GameManager::jumpPhase(BoardManager& boardManager, int currentCell) {
+
+    while (true) {
+        int key = getKey(); // Liest eine einzelne Taste ein
+
+        // Debug: Welche Taste wurde gedrückt?
+        if (key == 65) {
+            std::cout << "Taste gedrückt: Oben\n";
+        } else if (key == 66) {
+            std::cout << "Taste gedrückt: Unten\n";
+        } else if (key == 67) {
+            std::cout << "Taste gedrückt: Rechts\n";
+        } else if (key == 68) {
+            std::cout << "Taste gedrückt: Links\n";
+        } else if (key == 32) {
+            std::cout << "Taste gedrückt: Leertaste\n";
+        } else if (key == 127) { // MacOS-spezifisch
+            std::cout << "Taste gedrückt: Backspace\n";
+        } else if (key == 10) {
+            std::cout << "Taste gedrückt: Enter\n";
+        }
+
+        int nextCell = currentCell;
+        switch (key) {
+            case 65: // Oben
+                for (int neighbor : boardManager.verticalNeighbors[currentCell]) {
+                    if (neighbor < currentCell) {
+                        nextCell = neighbor;
+                        break;
+                    }
+                }
+                break;
+            case 66: // Unten
+                for (int neighbor : boardManager.verticalNeighbors[currentCell]) {
+                    if (neighbor > currentCell) {
+                        nextCell = neighbor;
+                        break;
+                    }
+                }
+                break;
+            case 68: // Links
+                for (int neighbor : boardManager.horizontalNeighbors[currentCell]) {
+                    if (neighbor < currentCell) {
+                        nextCell = neighbor;
+                        break;
+                    }
+                }
+                break;
+            case 67: // Rechts
+                for (int neighbor : boardManager.horizontalNeighbors[currentCell]) {
+                    if (neighbor > currentCell) {
+                        nextCell = neighbor;
+                        break;
+                    }
+                }
+                break;
+
+            case 32: // Leertaste
+                pressedEnter = false;
+
+            std::cout << "[SPACE HIT]" << std::endl;
+
+
+                if (!isMovingStone) {
+                    std::cout << "[SPACE SET] Leertaste gedrückt" << std::endl << "currentCell: " << currentCell << " belongs to : " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+
+                    std::cout << "[ZUG PHASE] kein setStone erlaubt!" << std::endl;
+                    break;
+                } else if (isMovingStone && this->movingStoneFrom != -1) {
+                    std::cout << "[SPACE MOVING] movingStone from: " << this->movingStoneFrom << " to: " << currentCell << " , currentPlayer: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+                    if (boardManager.moveStone(this->movingStoneFrom, currentCell)) {
+                    std::cout << "[SPACE MOVING] movedStone from : " << this->movingStoneFrom << " to : " << currentCell << " , currentPlayer" << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+
+
+                    isMovingStone = false;
+                    this->movingStoneFrom = -1;
+                        break;
+                    }
+                    break;
+                }
+            case 10: // Enter
+                if (boardManager.getCellState(currentCell) == boardManager.getCurrentPlayer()) {
+                    std::cout << "[ENTER CELLSTATE BELONGS CORRECT TO] " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+                    if (!pressedEnter) {
+                        pressedEnter = true;
+                        std::cout << "[ENTER MOV] movingStone from: " << currentCell << " belongs to: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+
+
+                        this->isMovingStone = true;
+                        std::cout << "set isMovingStone: " << isMovingStone << std::endl;
+                        this->movingStoneFrom = currentCell;
+
+                        break;
+                    }
+                    if (pressedEnter && currentCell == this->movingStoneFrom) {
+
+                        pressedEnter = false;
+                        this->isMovingStone = false;
+                        std::cout << "set isMovingStone: " << isMovingStone << std::endl;
+                        this->movingStoneFrom = -1;
+
+                        break;
+                    }
+                }
+                std::cout << "[ENTER NOT MINE] cellstate at: " << currentCell << " is: " << boardManager.enumToString(boardManager.getCellState(currentCell)) << std::endl;
+            break;
+
+            case 127: // Backspace
+                if (boardManager.millHasBeenFormed) {
+                    std::cout << "[BACKSPACE] millHasBeenFormed: " << boardManager.millHasBeenFormed << std::endl;
+                    if (boardManager.getCellState(currentCell) != boardManager.getCurrentPlayer() && boardManager.getCellState(currentCell) != boardManager.EMPTY
+                        && !(boardManager.checkMill(currentCell, boardManager.getOppositePlayer())) ) {
+                        std::cout << "removeStone: " << currentCell << " belongs to: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl;
+                        boardManager.removeStone(currentCell);
+                        this->dekrementStoneAfterDelete();
+                        break;
+                        }
+                    break;
+                }
+            std::cout << "[NO DELETE] millHasBeenFormed: " << boardManager.millHasBeenFormed << std::endl;
+            break;
+
+        }
+
+        printStatus(boardManager, currentCell);
+
+        // Überprüfen, ob die Bewegung gültig ist
+        if (boardManager.isValidMove(currentCell, nextCell)) {
+            std::cout << "Bewegung gültig: Zelle " << currentCell << " -> Zelle " << nextCell << "currentCell owner: " << boardManager.enumToString(boardManager.getCellState(currentCell))<< "\n";
+            return nextCell;
+        } else {
+            return nextCell;
+        }
+    }
+}
+
+/*
 int GameManager::jumpPhase(BoardManager& boardManager, int currentCell) {
 
     while (true) {
@@ -513,7 +717,7 @@ int GameManager::jumpPhase(BoardManager& boardManager, int currentCell) {
             return nextCell;
         }
     }
-}
+} */
 
 void GameManager::printStatus(BoardManager& boardManager, int currentCell) {
     std::cout << "isMovingStone: " << this->isMovingStone << std::endl
@@ -522,20 +726,96 @@ void GameManager::printStatus(BoardManager& boardManager, int currentCell) {
                         << "movingStoneFrom: " << this->movingStoneFrom << std::endl
                         << "currentPlayer: " << boardManager.enumToString(boardManager.getCurrentPlayer()) << std::endl
                     << "last cellState: " << boardManager.enumToString(boardManager.getCellState(currentCell)) << std::endl
-                    <<  "sumStones : " << getPlacedStones() << std::endl;
+                    <<  "getPlacedStones_Player1 : " << getPlacedStones()[0] << std::endl
+                    <<  "getPlacedStones_Player2 : " << getPlacedStones()[1] << std::endl
+                    <<  "HasStonesLeft_PLAYER1 : " << this->board_manager.HasStonesLeft_PLAYER1 << std::endl
+                    <<  "HasStonesLeft_PLAYER2 : " << this->board_manager.HasStonesLeft_PLAYER2 << std::endl
+                    << "latest keyhit: " << latestKeyInput << std::endl
+                    << "millHasBeenFormed: " << boardManager.millHasBeenFormed << std::endl
+                    << "isDeletingStone: " << this->board_manager.isDeletingStone << std::endl
+                    << "isAllowedToMoveAnywhere_Player1: " << this->board_manager.isAllowedToMoveAnywhere_Player1 << std::endl
+                    << "isAllowedToMoveAnywhere_Player2: " << this->board_manager.isAllowedToMoveAnywhere_Player2 << std::endl
+                    << "hasLegalMoves " << std::to_string(this->board_manager.getCurrentPlayer()) << " : " << hasLegalMoves(boardManager, this->board_manager.getCurrentPlayer()) << std::endl;
 }
 
-int GameManager::getPlacedStones() {
-    int sumStones = 0;
+std::array<int, 2> GameManager::getPlacedStones() {
+    int stonesOnBoard_PLAYER1 = 0;
+    int stonesOnBoard_PLAYER2 = 0;
+    std::array<int, 2> sumStonesOnBoard = {stonesOnBoard_PLAYER1, stonesOnBoard_PLAYER2};
 
     for (int i = 0; i < this->board_manager.getCells().size(); ++i) {
-        if (this->board_manager.getCells()[i] != BoardManager::CellState::EMPTY) {
+        if (this->board_manager.getCells()[i] == BoardManager::CellState::PLAYER1) {
             //std::cout << "sumStones index: " << i << " cellState: " << this->board_manager.enumToString(this->board_manager.getCells()[i]) << std::endl;
-            sumStones++;
+            stonesOnBoard_PLAYER1++;
+        } else if (this->board_manager.getCells()[i] == BoardManager::CellState::PLAYER2) {
+            //std::cout << "sumStones index: " << i << " cellState: " << this->board_manager.enumToString(this->board_manager.getCells()[i]) << std::endl;
+            stonesOnBoard_PLAYER2++;
         }
     }
-    return sumStones;
+
+
+    sumStonesOnBoard[0] = stonesOnBoard_PLAYER1;
+    sumStonesOnBoard[1] = stonesOnBoard_PLAYER2;
+    return sumStonesOnBoard;
 }
+
+void GameManager::dekrementStoneAfterDelete() {
+    if (this->board_manager.getCurrentPlayer() == BoardManager::CellState::PLAYER1) {
+        this->getPlacedStones()[0]--;
+    } else if (this->board_manager.getCurrentPlayer() == BoardManager::CellState::PLAYER2) {
+        this->getPlacedStones()[1]--;
+    } else {
+        std::cout << "Error: No player found to delete stone from" << std::endl;
+    }
+}
+
+
+bool GameManager::isPlayerAllowedToMoveAnywhere(BoardManager::CellState currentPlayer) {
+    if (currentPlayer == BoardManager::PLAYER1) {
+        if (this->getPlacedStones()[0] <= 3) {
+            this->board_manager.isAllowedToMoveAnywhere_Player1 = true;
+            return true;
+        }
+    } else if (currentPlayer == BoardManager::PLAYER2) {
+        if (this->getPlacedStones()[1] <= 3) {
+            this->board_manager.isAllowedToMoveAnywhere_Player2 = true;
+            return true;
+        }
+    }
+        return false;
+
+}
+
+bool GameManager::hasLegalMoves(BoardManager& boardManager, BoardManager::CellState currentPlayer
+    ) {
+    const auto& cells = boardManager.getCells();
+
+    // Iteriere über alle Zellen des Spielfelds
+    for (int i = 0; i < cells.size(); ++i) {
+        // Überspringe Zellen, die nicht dem aktuellen Spieler gehören
+        if (cells[i] != currentPlayer) {
+            continue;
+        }
+
+        // Überprüfe horizontale Nachbarn
+        for (int neighbor : boardManager.horizontalNeighbors[i]) {
+            if (cells[neighbor] == BoardManager::CellState::EMPTY) {
+                return true; // Legaler Zug gefunden
+            }
+        }
+
+        // Überprüfe vertikale Nachbarn
+        for (int neighbor : boardManager.verticalNeighbors[i]) {
+            if (cells[neighbor] == BoardManager::CellState::EMPTY) {
+                return true; // Legaler Zug gefunden
+            }
+        }
+    }
+
+    // Keine legalen Züge gefunden
+    return false;
+}
+
 
 // ---------- Spielbrett und Einstellungen ----------
 
@@ -573,7 +853,7 @@ void GameManager::printBoard(const BoardManager& boardManager, BoardManager::Cel
         logger.log(LogLevel::DEBUG, "Cell " + std::to_string(i) + ": " + std::to_string(this->board_manager.cells[i]));
     }
 
-    //std::cout << "\033[2J\033[H"; // Bildschirm löschen und Cursor zurücksetzen
+    std::cout << "\033[2J\033[H"; // Bildschirm löschen und Cursor zurücksetzen
 
     logger.log(LogLevel::INFO, "GameManager: Drawing board.");
     std::cout << "\n\n\n";
@@ -601,7 +881,7 @@ void GameManager::printBoard(const BoardManager& boardManager, BoardManager::Cel
     std::cout << "\t\t\t\t\t\t **currentPlayer: " << this->board_manager.enumToString(currentPlayer) << "**\n";
 
 
-        std::cout << "\n\n\n";
+    /*    std::cout << "\n\n\n";
     std::cout << "				  " << this->board_manager.enumToString(this->board_manager.cells[0]) << "--------------------" << this->board_manager.enumToString(this->board_manager.cells[1]) << "--------------------" << this->board_manager.enumToString(this->board_manager.cells[2]) << "\n";
     std::cout << "				    |                        |                        |\n";
     std::cout << "				    |                        |                        |\n";
@@ -628,7 +908,7 @@ void GameManager::printBoard(const BoardManager& boardManager, BoardManager::Cel
     for (int i = 0; i < cells.size(); ++i) {
         logger.log(LogLevel::DEBUG, "cellState " + std::to_string(i) + ": " + this->board_manager.enumToString(this->board_manager.cells[i]));
     }
-
+*/
     logger.log(LogLevel::INFO, "GameManager: Player " + this->board_manager.enumToString(currentPlayer) + " " + " is now playing.");
 }
 

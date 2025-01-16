@@ -6,6 +6,8 @@
 #include "../Logger/Logger.h"
 #include <algorithm>
 
+#include "GameManager/GameManager.h"
+
 extern Logger logger;
 
 BoardManager::BoardManager() : cells(24, EMPTY) {
@@ -22,14 +24,29 @@ bool BoardManager::setStone(int position, CellState state) {
         return false;
     }
     cells[position] = state;
+    if (this->getCurrentPlayer() == PLAYER1) {
+        if (HasStonesLeft_PLAYER1 == 0) {
+            logger.log(LogLevel::ERROR, "setStone: No stones left for PLAYER1.");
+            return false;
+        }
+        this->HasStonesLeft_PLAYER1--;
+    } else if (this->getCurrentPlayer() == PLAYER2) {
+        if (HasStonesLeft_PLAYER2 == 0) {
+            logger.log(LogLevel::ERROR, "setStone: No stones left for PLAYER2.");
+            return false;
+        }
+        this->HasStonesLeft_PLAYER2--;
+    }
 
-    logger.log(LogLevel::ERROR, "setStone: CurrentPlayer " + enumToString(getCurrentPlayer()) + " set stone at position " + std::to_string(position) + " for player " + enumToString(state) + ".");
+    logger.log(LogLevel::INFO, "setStone: CurrentPlayer " + enumToString(getCurrentPlayer()) + " set stone at position " + std::to_string(position) + " for player " + enumToString(state) + ".");
 
     std::cout << "checkMill: " << checkMill(position, state) << std::endl;
     if (!checkMill(position, state)) {
         switchPlayer();
     } else {
-        //TODO remove stone with backspace
+        this->millHasBeenFormed = true;
+        this->isDeletingStone = true;
+        std::cout << "Mill formed, can delete" << std::endl;
     }
 
         return true;
@@ -40,6 +57,9 @@ bool BoardManager::isValidMove(int from, int to) {
     || std::find(horizontalNeighbors[from].begin(), horizontalNeighbors[from].end(), to) != horizontalNeighbors[from].end()) {
         logger.log(LogLevel::DEBUG, "isValidMove: Move from " + std::to_string(from) +
                                     " to " + std::to_string(to) + " is valid.");
+        return true;
+    } else if (getCurrentPlayer() == PLAYER1 && isAllowedToMoveAnywhere_Player1
+        || getCurrentPlayer() == PLAYER2 && isAllowedToMoveAnywhere_Player2) {
         return true;
     } else {
         logger.log(LogLevel::DEBUG, "isValidMove: Move from " + std::to_string(from) +
@@ -87,7 +107,15 @@ bool BoardManager::moveStone(int from, int to) {
     logger.log(LogLevel::INFO, "moveStone: Player " + std::to_string(cells[to]) +
                                " moved stone from " + std::to_string(from) +
                                " to " + std::to_string(to) + ".\n cellFrom: " + enumToString(getCellState(from)) + "\n cellTo: " + enumToString(getCellState(to)));
-    switchPlayer();
+
+    std::cout << "checkMill: " << checkMill(to, getCurrentPlayer()) << std::endl;
+    if (!checkMill(to, getCurrentPlayer())) {
+        switchPlayer();
+    } else {
+        this->millHasBeenFormed = true;
+        this->isDeletingStone = true;
+        std::cout << "Mill formed, can delete" << std::endl;
+    }
     return true;
 }
 
@@ -103,7 +131,12 @@ bool BoardManager::removeStone(int at) {
     }
 
     cells[at] = EMPTY;
+    std::cout << "[REMOVE STONE] at: " << at << std::endl;
     logger.log(LogLevel::INFO, "removeStone: Stone removed from position " + std::to_string(at) + ".");
+
+    if (millHasBeenFormed) {
+        millHasBeenFormed = false;
+    }
     switchPlayer();
     return true;
 }
@@ -119,6 +152,18 @@ BoardManager::CellState BoardManager::getCurrentPlayer() const {
             return EMPTY;
         }
     }
+
+BoardManager::CellState BoardManager::getOppositePlayer() const {
+    if (currentPlayer == 0) {
+        return PLAYER2;
+    }
+    else if (currentPlayer == 1) {
+        return PLAYER1;
+    }
+    else {
+        return EMPTY;
+    }
+}
 
 void BoardManager::switchPlayer() {
     if (currentPlayer == CellState::PLAYER1) {

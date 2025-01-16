@@ -8,15 +8,19 @@
 #include "BoardManager/BoardManager.h"
 
 class GameManager {
+
 private:
     BoardManager& board_manager;
     bool isMovingStone;
     int movingStoneFrom;
     bool pressedEnter;
     int currentPhase = 0; // 0 = set, 1 = move, 2 = jump
+    int latestKeyInput = 0;
 
 public:
     GameManager(BoardManager& board_manager) : board_manager(board_manager) {};
+
+    int getKey();
 
     int setPhase(BoardManager &boardManager, int currentCell);
 
@@ -26,7 +30,13 @@ public:
 
     void printStatus(BoardManager &boardManager, int currentCell);
 
-    int getPlacedStones();
+    std::array<int, 2> getPlacedStones();
+
+    void dekrementStoneAfterDelete();
+
+    bool isPlayerAllowedToMoveAnywhere(BoardManager::CellState currentPlayer);
+
+    bool hasLegalMoves(BoardManager &boardManager, BoardManager::CellState currentPlayer);
 
     void printBoard(const BoardManager &boardManager, BoardManager::CellState currentPlayer, int currentCell);
 

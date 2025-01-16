@@ -28,6 +28,14 @@ public:
 
     BoardManager();
 
+    bool millHasBeenFormed = false;
+    bool isDeletingStone = false;
+    bool isAllowedToMoveAnywhere_Player1 = false;
+    bool isAllowedToMoveAnywhere_Player2 = false;
+
+    u_int HasStonesLeft_PLAYER1 = 9;
+    u_int HasStonesLeft_PLAYER2 = 9;
+
     std::string enumToString(CellState cell_state);
 
     bool setStone(int position, CellState player);
@@ -39,6 +47,8 @@ public:
     bool removeStone(int at);
 
     BoardManager::CellState getCurrentPlayer() const;
+
+    CellState getOppositePlayer() const;
 
     void switchPlayer();
 
