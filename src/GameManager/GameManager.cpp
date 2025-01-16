@@ -8,6 +8,8 @@
 #include <termios.h>
 #include <unistd.h>
 #include "./Logger/Logger.h"
+#include <fstream>
+#include <sstream>
 
 extern Logger logger;
 
@@ -17,6 +19,7 @@ void GameManager::start() {
     logger.log(LogLevel::INFO, "GameManager: Starting game manager.");
 
     logger.log(LogLevel::INFO, "GameManager: Displaying main menu.");
+    clearScreen();
     std::cout << "\t\t\tWillkommen bei Mühle!\n\n";
     std::cout << "\t\t1. Neues Spiel starten\n";
     std::cout << "\t\t2. Spiel laden\n";
@@ -27,7 +30,9 @@ void GameManager::start() {
         startNewGame();
     } else if (userInput == 2) {
         if (isSaveFileAvailable()) {
-            loadGame("game_save.dat");
+            loadGame("save.muehle");
+            gameLoop();
+
         } else {
             logger.log(LogLevel::WARNING, "GameManager: No save file available.");
         }
@@ -65,6 +70,7 @@ void GameManager::gameLoop() {
             logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
 
             printPhase();
+            this->saveGame("save.muehle");
             // Platzhalter für zukünftige RuleEngine-Integration
             // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
 
@@ -83,6 +89,7 @@ void GameManager::gameLoop() {
 
         logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
         printPhase();
+        this->saveGame("save.muehle");
 
         // Platzhalter für zukünftige RuleEngine-Integration
         // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
@@ -102,6 +109,7 @@ void GameManager::gameLoop() {
 
         logger.log(LogLevel::INFO, "GameManager: Waiting for the next move.");
         printPhase();
+        this->saveGame("save.muehle");
 
         // Platzhalter für zukünftige RuleEngine-Integration
         // Abbruchbedingung: Hier eine manuelle Eingabe simulieren
@@ -820,8 +828,8 @@ bool GameManager::hasLegalMoves(BoardManager& boardManager, BoardManager::CellSt
 // ---------- Spielbrett und Einstellungen ----------
 
 void GameManager::printBoard(const BoardManager& boardManager, BoardManager::CellState currentPlayer, int currentCell = -1) {
-    const std::string player1 = "{ X }";
-    const std::string player2 = "{ O }";
+    const std::string player1 = "{ " + iconPlayer1 + " }";
+    const std::string player2 = "{ " + iconPlayer2 + " }";
     const std::string empty = "{   }";
     const std::string highlighted = "\033[31m"; // ANSI escape code für rote Schrift
     const std::string beingMoved = "\033[44m"; // ANSI escape code für blaue Schrift
@@ -912,35 +920,131 @@ void GameManager::printBoard(const BoardManager& boardManager, BoardManager::Cel
     logger.log(LogLevel::INFO, "GameManager: Player " + this->board_manager.enumToString(currentPlayer) + " " + " is now playing.");
 }
 
+#include <iostream>
+#include "GameManager.h"
+
 void GameManager::handleSettingsMenu() {
-    logger.log(LogLevel::INFO, "GameManager: Handling settings menu.");
+    while (true) {
+        clearScreen();
+        std::cout << "\n--- Einstellungen ---\n";
+        std::cout << "1. Spieler 1 Symbol ändern (aktuell: " << this->iconPlayer1 << ")\n";
+        std::cout << "2. Spieler 2 Symbol ändern (aktuell: " << this->iconPlayer2 << ")\n";
+        std::cout << "3. Zurück zum Hauptmenü\n\n";
+        std::cout << "Wähle eine Option: ";
 
-    std::vector<std::string> options = {"1. PLAYER1", "2. PLAYER2"};
-    int selectedPlayer = getUserInput(1, 2);
+        int userInput = getUserInput(1, 3); // Eingabe für Menüoptionen mit getUserInput
+        clearScreen();
 
-    if (selectedPlayer == 1) {
-        logger.log(LogLevel::INFO, "GameManager: Modifying PLAYER1 settings.");
-        // Hier könnten Änderungen an PLAYER1 implementiert werden
-    } else if (selectedPlayer == 2) {
-        logger.log(LogLevel::INFO, "GameManager: Modifying PLAYER2 settings.");
-        // Hier könnten Änderungen an PLAYER2 implementiert werden
+        switch (userInput) {
+            case 1: {
+                std::cout << "Gib das neue Symbol für Spieler 1 ein (1 Zeichen oder Emoji): ";
+                std::string newSymbol;
+                std::cin >> newSymbol;
+
+                // Prüfen, ob die Eingabe gültig ist
+                if (newSymbol == this->iconPlayer2) {
+                    std::cout << "Das Symbol darf nicht mit Spieler 2 übereinstimmen!\n";
+                } else {
+                    this->iconPlayer1 = newSymbol;
+                    std::cout << "Symbol für Spieler 1 erfolgreich geändert zu: " << this->iconPlayer1 << "\n";
+                }
+                break;
+            }
+            case 2: {
+                std::cout << "Gib das neue Symbol für Spieler 2 ein (1 Zeichen oder Emoji): ";
+                std::string newSymbol;
+                std::cin >> newSymbol;
+
+                // Prüfen, ob die Eingabe gültig ist
+                if (newSymbol == this->iconPlayer1) {
+                    std::cout << "Das Symbol darf nicht mit Spieler 1 übereinstimmen!\n";
+                } else {
+                    this->iconPlayer2 = newSymbol;
+                    std::cout << "Symbol für Spieler 2 erfolgreich geändert zu: " << this->iconPlayer2 << "\n";
+                }
+                break;
+            }
+            case 3:
+                std::cout << "Zurück zum Hauptmenü...\n";
+                start(); // Zurück zum Hauptmenü
+            default:
+                std::cout << "Ungültige Option. Bitte erneut versuchen.\n";
+                break;
+        }
+
+        std::cout << "\nDrücke Enter, um fortzufahren...";
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Pause für den Nutzer
+        std::cin.get();
     }
 }
 
-bool GameManager::loadGame(const std::string& saveFile) {
-    std::ifstream file(saveFile);
-    if (!file.is_open()) {
-        logger.log(LogLevel::ERROR, "GameManager: Failed to load game from " + saveFile);
-        return false;
+
+void GameManager::saveGame(const std::string& filename) {
+    std::ofstream outFile(filename);
+
+    if (!outFile.is_open()) {
+        std::cerr << "Fehler: Kann die Datei '" << filename << "' nicht öffnen.\n";
+        return;
     }
-    logger.log(LogLevel::INFO, "GameManager: Game loaded successfully from " + saveFile + ".");
-    return true;
+
+    const auto& cells = this->board_manager.getCells();
+    for (int i = 0; i < cells.size(); ++i) {
+        outFile << i << "," << static_cast<int>(cells[i]) << "\n";
+    }
+    outFile << "playerStones," << this->board_manager.HasStonesLeft_PLAYER1 << "," << this->board_manager.HasStonesLeft_PLAYER2 << "\n";
+
+    outFile.close();
+    std::cout << "Spielstand erfolgreich in '" << filename << "' gespeichert.\n";
 }
 
 bool GameManager::isSaveFileAvailable() {
-    std::ifstream file("game_save.dat");
+    std::ifstream file("save.muehle");
     return file.is_open();
 }
+
+void GameManager::loadGame(const std::string& filename) {
+    std::ifstream inFile(filename);
+
+    if (!inFile.is_open()) {
+        std::cerr << "Fehler: Kann die Datei '" << filename << "' nicht öffnen.\n";
+        return;
+    }
+
+    std::string line;
+    while (std::getline(inFile, line)) {
+        std::istringstream iss(line);
+        std::string key, value1, value2;
+
+        if (line.find("playerStones") != std::string::npos) {
+            // Zeile mit den verbleibenden Steinen lesen
+            if (std::getline(iss, key, ',') &&
+                std::getline(iss, value1, ',') &&
+                std::getline(iss, value2)) {
+                this->board_manager.HasStonesLeft_PLAYER1 = std::stoi(value1);
+                this->board_manager.HasStonesLeft_PLAYER2 = std::stoi(value2);
+                }
+        } else {
+            // Standard-Zellzustand verarbeiten
+            std::string cellIndexStr, cellStateStr;
+            if (std::getline(iss, cellIndexStr, ',') && std::getline(iss, cellStateStr)) {
+                int cellIndex = std::stoi(cellIndexStr);
+                int cellState = std::stoi(cellStateStr);
+
+                if (cellState == static_cast<int>(BoardManager::CellState::PLAYER1)) {
+                    this->board_manager.setStone(cellIndex, BoardManager::CellState::PLAYER1);
+                } else if (cellState == static_cast<int>(BoardManager::CellState::PLAYER2)) {
+                    this->board_manager.setStone(cellIndex, BoardManager::CellState::PLAYER2);
+                } else {
+                    this->board_manager.setStone(cellIndex, BoardManager::CellState::EMPTY);
+                }
+            }
+        }
+    }
+
+    inFile.close();
+    std::cout << "Spielstand erfolgreich aus '" << filename << "' geladen.\n";
+}
+
 
 void GameManager::printPhase() {
     switch (this->currentPhase){

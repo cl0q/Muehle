@@ -17,6 +17,9 @@ private:
     int currentPhase = 0; // 0 = set, 1 = move, 2 = jump
     int latestKeyInput = 0;
 
+    std::string iconPlayer1 = "X";
+    std::string iconPlayer2 = "O";
+
 public:
     GameManager(BoardManager& board_manager) : board_manager(board_manager) {};
 
@@ -56,8 +59,11 @@ public:
 
 
     void startNewGame();
-    static void handleSettingsMenu();
-    static bool loadGame(const std::string& saveFile);
+    void handleSettingsMenu();
+
+    void saveGame(const std::string &filename);
+
+    void loadGame(const std::string &saveFile);
     static bool isSaveFileAvailable();
 
     void printPhase();
